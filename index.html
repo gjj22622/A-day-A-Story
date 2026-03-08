@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一念清涼 — 讓古老智慧照亮你此刻的心</title>
+  <meta name="description" content="輸入你的心情，讓千年佛經寓言為你帶來一念清涼。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <!-- Ambient fireflies -->
+  <div class="ambient" id="ambient"></div>
+
+  <!-- SCREEN 1: LANDING -->
+  <div class="screen active" id="landing">
+    <div class="lotus-icon">🪷</div>
+    <h1 class="brand-title">一念清涼</h1>
+    <p class="brand-sub">讓千年古老智慧<br>照亮你此刻的心</p>
+    <button class="enter-btn" onclick="goToMood()">尋 一 則 故 事</button>
+    <p style="margin-top:2rem; font-size:0.8rem; color:var(--muted); opacity:0.5;">源自《百喻經》— 西元五世紀佛教寓言</p>
+  </div>
+
+  <!-- SCREEN 2: MOOD SELECTION -->
+  <div class="screen" id="mood-select">
+    <div class="mood-header">
+      <h2>你現在的感覺是什麼？</h2>
+      <p>選擇最貼近的心情，或直接輸入你的狀態</p>
+    </div>
+    <div class="mood-input-area">
+      <div class="mood-input-wrap">
+        <input type="text" class="mood-input" id="moodInput" placeholder="例如：覺得很累、工作壓力大、不知道該怎麼選擇..." autocomplete="off">
+        <button class="mood-submit" onclick="submitMood()">求一念</button>
+      </div>
+      <div class="divider-text">或者，選一個最貼近你的感受</div>
+
+      <!-- EMOTION TAGS -->
+      <div class="tag-section">
+        <div class="tag-section-title">🌧 我感到…</div>
+        <div class="tag-cloud">
+          <button class="mood-tag" data-tags="anxiety,exhaustion">焦慮疲憊</button>
+          <button class="mood-tag" data-tags="confusion">迷茫困惑</button>
+          <button class="mood-tag" data-tags="frustration,anger">挫敗憤怒</button>
+          <button class="mood-tag" data-tags="sadness,loneliness">悲傷孤單</button>
+          <button class="mood-tag" data-tags="regret,guilt">後悔自責</button>
+          <button class="mood-tag" data-tags="fear,despair">恐懼絕望</button>
+          <button class="mood-tag" data-tags="jealousy,resentment">嫉妒委屈</button>
+        </div>
+      </div>
+
+      <!-- CONTEXT TAGS -->
+      <div class="tag-section">
+        <div class="tag-section-title">🔍 我正在面對…</div>
+        <div class="tag-cloud">
+          <button class="mood-tag" data-tags="career_failure,career_decision">工作職涯</button>
+          <button class="mood-tag" data-tags="relationship_conflict,relationship_family">人際關係</button>
+          <button class="mood-tag" data-tags="self_doubt,perfectionism">自我懷疑</button>
+          <button class="mood-tag" data-tags="life_decision,change_transition">人生抉擇</button>
+          <button class="mood-tag" data-tags="letting_go,loss">放不下</button>
+          <button class="mood-tag" data-tags="failure_setback,criticism">失敗打擊</button>
+        </div>
+      </div>
+
+      <!-- ASPIRATION TAGS -->
+      <div class="tag-section">
+        <div class="tag-section-title">✨ 我渴望…</div>
+        <div class="tag-cloud">
+          <button class="mood-tag" data-tags="peace_seeking,acceptance">內心平靜</button>
+          <button class="mood-tag" data-tags="courage_needed,motivation">勇氣與動力</button>
+          <button class="mood-tag" data-tags="growth,hope">成長突破</button>
+          <button class="mood-tag" data-tags="patience,perseverance">耐心堅持</button>
+          <button class="mood-tag" data-tags="simplicity,present_moment">返璞歸真</button>
+        </div>
+      </div>
+
+      <button class="seek-btn" id="seekBtn" onclick="seekStory()">🪷 為你尋一則故事</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: TRANSITION -->
+  <div class="screen" id="transition-screen">
+    <div>
+      <p class="transition-text" id="transitionText">正在千年智慧中<br>為你尋找一念清涼…</p>
+      <div class="transition-lotus">🪷</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: STORY DISPLAY -->
+  <div class="screen" id="story-screen">
+    <button class="back-btn" onclick="goToMood()">← 換個心情</button>
+    <div class="story-container" id="storyContainer"></div>
+  </div>
+
+  <!-- Load JavaScript -->
+  <script src="./js/app.js"></script>
+</body>
+</html>
