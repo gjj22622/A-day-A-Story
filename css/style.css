@@ -571,15 +571,24 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
   margin-bottom: 2rem;
 }
+/* Build scene: 按鈕固定在蓋樓區底部，不需往下滾 */
+.build-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 50vh;
+}
 .building-visual {
   display: flex;
   flex-direction: column-reverse;
   gap: 0;
   max-width: 400px;
-  margin: 0 auto 2rem;
+  width: 100%;
+  margin: 0 auto 1.5rem;
+  padding-left: 2.5rem;
 }
 .building-floor {
-  padding: 1.5rem;
+  padding: 1.2rem 1.5rem;
   border: 1px solid rgba(192,214,223,0.1);
   background: rgba(255,255,255,0.02);
   text-align: center;
@@ -590,7 +599,6 @@ a { color: inherit; text-decoration: none; }
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.8s ease;
-  cursor: pointer;
   position: relative;
 }
 .building-floor::before {
@@ -616,17 +624,21 @@ a { color: inherit; text-decoration: none; }
   100% { transform: scale(1); opacity: 1; }
 }
 .build-btn {
+  position: sticky;
+  bottom: 2rem;
   display: block;
-  margin: 0 auto 2rem;
-  padding: 0.8rem 2rem;
+  margin: 1rem auto 2rem;
+  padding: 1rem 2.5rem;
   border: 1px solid var(--lotus-gold);
-  background: transparent;
+  background: var(--deep-indigo);
   color: var(--lotus-gold);
   font-family: var(--serif);
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
   border-radius: 8px;
   transition: all 0.3s;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(13,27,42,0.8);
 }
 .build-btn:hover { background: rgba(212,165,116,0.1); }
 
@@ -746,7 +758,7 @@ a { color: inherit; text-decoration: none; }
   .mood-input-area { padding: 0 0.5rem; }
   .qa-choices { max-width: 100% !important; }
   .building-floor::before { display: none; }
-  .building-visual { margin-left: 0; }
+  .building-visual { margin-left: 0; padding-left: 0; }
   .action-row { flex-direction: column; align-items: center; }
 }
 

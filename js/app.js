@@ -6,6 +6,7 @@ let currentStory = null;
 let typewriterInterval = null;
 let litCount = 0;
 let buildIdx = 0;
+let recentStoryIds = []; // 記錄最近看過的故事，避免短期重複
 
 // ===== LOAD DATA ON STARTUP =====
 // Supports both HTTP server (fetch) and local file:// (XMLHttpRequest fallback)
@@ -549,7 +550,8 @@ function renderBuild(story, container) {
       <h1 class="story-title">${story.title}</h1>
       <p class="story-source">${story.original_title}｜${story.source}</p>
     </div>
-    <div class="building-visual" id="buildingVisual">
+    <div class="build-scene">
+      <div class="building-visual" id="buildingVisual">
   `;
 
   // Use text and floor_labels
@@ -560,7 +562,8 @@ function renderBuild(story, container) {
   });
 
   html += `</div>
-    <button class="build-btn" id="buildBtn" onclick="buildNext()">開始蓋房子 🏗️</button>
+      <button class="build-btn" id="buildBtn" onclick="buildNext()">開始蓋房子 🏗️</button>
+    </div>
   `;
   html += buildMoralHTML(story);
   container.innerHTML = html;
@@ -577,8 +580,9 @@ function buildNext() {
 
     const btn = document.getElementById('buildBtn');
     if (buildIdx < floors.length) {
-      const labels = ["繼續往上蓋", "蓋第二層", "蓋最後一層"];
-      btn.textContent = (labels[buildIdx - 1] || "繼續") + " 🏗️";
+      const floorNames = currentStory.floor_labels || [];
+      const nextLabel = floorNames[buildIdx] || `第${buildIdx + 1}層`;
+      btn.textContent = `蓋${nextLabel} 🏗️`;
     } else {
       btn.textContent = "看見寓意 🪷";
       btn.onclick = () => {
@@ -591,7 +595,8 @@ function buildNext() {
       };
     }
 
-    floor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 自動捲動讓最新蓋好的樓層和按鈕都在畫面中
+    btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
@@ -604,8 +609,19 @@ function randomStory() {
     Analytics.track('random_story', {});
   }
 
-  // Pick a truly random story
-  currentStory = stories[Math.floor(Math.random() * stories.length)];
+  // 避免短期重複：排除最近看過的故事（最多記 20 則）
+  let pool = stories.filter(s => !recentStoryIds.includes(s.id));
+  if (pool.length === 0) {
+    // 全部看完了，清空記錄重新開始
+    recentStoryIds = [];
+    pool = stories;
+  }
+
+  currentStory = pool[Math.floor(Math.random() * pool.length)];
+
+  // 記錄到最近看過清單
+  recentStoryIds.push(currentStory.id);
+  if (recentStoryIds.length > 20) recentStoryIds.shift();
 
   // Reset states
   litCount = 0;
@@ -702,9 +718,15 @@ function tryAnother() {
   if (window.Analytics) {
     Analytics.track('try_another', { fromStoryId: currentStory.id });
   }
-  // Pick a different story randomly
-  const others = stories.filter(s => s.id !== currentStory.id);
-  currentStory = others[Math.floor(Math.random() * others.length)];
+  // 排除最近看過的故事
+  let pool = stories.filter(s => !recentStoryIds.includes(s.id));
+  if (pool.length === 0) {
+    recentStoryIds = [];
+    pool = stories.filter(s => s.id !== currentStory.id);
+  }
+  currentStory = pool[Math.floor(Math.random() * pool.length)];
+  recentStoryIds.push(currentStory.id);
+  if (recentStoryIds.length > 20) recentStoryIds.shift();
 
   // Reset states
   litCount = 0;
