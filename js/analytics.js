@@ -51,6 +51,9 @@ const Analytics = (() => {
       // 簡化 userAgent（避免個資）
       userAgent = simplifyUserAgent(navigator.userAgent);
 
+      // 標記初始化完成（必須在 track() 之前，否則 track 會因未初始化而跳過）
+      isInitialized = true;
+
       // 設置在線狀態追蹤
       setupPresenceTracking();
 
@@ -64,8 +67,6 @@ const Analytics = (() => {
       window.addEventListener('beforeunload', () => {
         removePresence();
       });
-
-      isInitialized = true;
       console.log('一念清涼: 分析模組初始化完成');
       return true;
     } catch (error) {
