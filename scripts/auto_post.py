@@ -22,6 +22,8 @@ import argparse
 import urllib.request
 import urllib.parse
 import urllib.error
+import mimetypes
+import uuid
 from datetime import datetime, timezone, timedelta
 
 # ─────────────────────────────────────────────
@@ -35,6 +37,7 @@ GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 CALENDAR_PATH = "data/content_calendar.json"
 STORIES_PATH = "data/stories.json"
 POST_LOG_PATH = "data/post_log.json"
+IMAGES_DIR = "images/stories"
 
 # 台灣時區 UTC+8
 TW_TZ = timezone(timedelta(hours=8))
@@ -44,11 +47,70 @@ TW_TZ = timezone(timedelta(hours=8))
 # Graph API 操作
 # ─────────────────────────────────────────────
 
-def fb_post(page_id, access_token, message, link=None):
+def _multipart_encode(fields, files):
+    """
+    手動建立 multipart/form-data 請求體
+    fields: dict of {name: value}
+    files: list of (name, filename, content_bytes, content_type)
+    回傳 (body_bytes, content_type_header)
+    """
+    boundary = f"----FormBoundary{uuid.uuid4().hex}"
+    body = bytearray()
+
+    for key, value in fields.items():
+        body += f"--{boundary}\r\n".encode()
+        body += f'Content-Disposition: form-data; name="{key}"\r\n\r\n'.encode()
+        body += f"{value}\r\n".encode()
+
+    for name, filename, content, content_type in files:
+        body += f"--{boundary}\r\n".encode()
+        body += f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'.encode()
+        body += f"Content-Type: {content_type}\r\n\r\n".encode()
+        body += content
+        body += b"\r\n"
+
+    body += f"--{boundary}--\r\n".encode()
+    return bytes(body), f"multipart/form-data; boundary={boundary}"
+
+
+def fb_post(page_id, access_token, message, link=None, image_path=None):
     """
     透過 Graph API 發文到 Facebook 粉專
+    如有 image_path，使用 /{page_id}/photos（圖文貼文）
+    否則使用 /{page_id}/feed（純文字貼文）
     回傳 post_id 或拋出例外
     """
+
+    # ─── 有圖片：用 /photos 端點 ───
+    if image_path and os.path.exists(image_path):
+        url = f"{GRAPH_API_BASE}/{page_id}/photos"
+
+        mime_type = mimetypes.guess_type(image_path)[0] or 'image/png'
+        filename = os.path.basename(image_path)
+
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+
+        fields = {
+            "message": message,
+            "access_token": access_token,
+        }
+        files = [("source", filename, image_data, mime_type)]
+
+        body, content_type = _multipart_encode(fields, files)
+        req = urllib.request.Request(url, data=body, method='POST', headers={
+            'Content-Type': content_type,
+        })
+
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                result = json.loads(resp.read().decode('utf-8'))
+                return result.get('post_id') or result.get('id')
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            raise Exception(f"FB Photos API Error {e.code}: {error_body}")
+
+    # ─── 無圖片：用 /feed 端點 ───
     url = f"{GRAPH_API_BASE}/{page_id}/feed"
     data = {
         "message": message,
@@ -272,12 +334,33 @@ def main():
     print(content['message'][:300] + '...' if len(content['message']) > 300 else content['message'])
     print(f"{'─'*50}")
 
+    # ─── 準備圖片 ───
+    image_path = None
+    gemini_key = os.environ.get('GEMINI_API_KEY', '')
+
+    # 動態匯入 generate_image 模組
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        from generate_image import ensure_image
+        image_path = ensure_image(
+            story_id=entry['story_id'],
+            stories=stories,
+            api_key=gemini_key,
+            force=False
+        )
+        if image_path:
+            print(f"🖼️ 圖片就緒：{image_path}")
+    except Exception as e:
+        print(f"⚠️ 圖片產生失敗，將以純文字發文：{e}")
+        image_path = None
+
     # ─── 乾跑模式 ───
     if args.dry_run:
         print("\n🧪 乾跑模式：不會實際發文")
         result = {
             "status": "dry_run",
             "post_id": None,
+            "has_image": image_path is not None,
         }
         log_post(POST_LOG_PATH, entry, result)
         print("✅ 乾跑完成，已記錄到 post_log.json")
@@ -293,18 +376,21 @@ def main():
     max_retries = 2
     for attempt in range(max_retries):
         try:
-            print(f"\n📤 發文中... (嘗試 {attempt + 1}/{max_retries})")
+            post_type = "圖文" if image_path else "純文字"
+            print(f"\n📤 {post_type}發文中... (嘗試 {attempt + 1}/{max_retries})")
             post_id = fb_post(
                 page_id=page_id,
                 access_token=access_token,
                 message=content['message'],
-                link=content['link']
+                link=content['link'] if not image_path else None,
+                image_path=image_path,
             )
             print(f"✅ 發文成功！Post ID: {post_id}")
 
             result = {
                 "status": "success",
                 "post_id": post_id,
+                "has_image": image_path is not None,
             }
             log_post(POST_LOG_PATH, entry, result)
 
