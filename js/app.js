@@ -161,16 +161,12 @@ function submitMood() {
     });
   }
 
-  // Track text input
-  if (window.Analytics && input) {
-    Analytics.track('mood_text_input', { text: input });
-  }
-
-  seekStory();
+  seekStory(input);
 }
 
+
 // ===== MATCHING ALGORITHM =====
-function seekStory() {
+function seekStory(userInput) {
   if (selectedTags.size === 0 && !document.getElementById('moodInput').value.trim()) {
     return;
   }
@@ -204,6 +200,15 @@ function seekStory() {
 
   // Clean up
   stories.forEach(s => delete s._inputScore);
+
+  // Track text input WITH matched story (after matching)
+  if (window.Analytics && userInput) {
+    Analytics.track('mood_text_input', {
+      text: userInput,
+      matchedStoryId: currentStory.id,
+      matchedStoryTitle: currentStory.title
+    });
+  }
 
   // Show transition
   showTransition();

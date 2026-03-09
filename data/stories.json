@@ -1752,7 +1752,7 @@
     "title": "數羊的牧羊人",
     "original_title": "牧羊人喻",
     "source": "百喻經·卷二",
-    "style": "build",
+    "style": "lines",
     "text": [
       "有個牧羊人，每天要照顧一百隻羊。",
       "有一天，鄰居送了他十隻新羊。他數了數：一百一十隻，好開心。",
@@ -1793,13 +1793,7 @@
       "不在意",
       "疏忽"
     ],
-    "floor_labels": [
-      "110隻",
-      "少了1隻",
-      "又少了幾隻",
-      "漸漸流失",
-      "只剩十幾隻"
-    ],
+    "floor_labels": [],
     "social": {
       "ig": null,
       "line": null,
@@ -1809,7 +1803,8 @@
       "video_url": null,
       "illustrations": [],
       "narration_url": null
-    }
+    },
+    "questions": []
   },
   {
     "id": "BDH-031",
@@ -3843,7 +3838,7 @@
     "title": "五百顆歡喜丸",
     "original_title": "五百歡喜丸喻",
     "source": "百喻經·卷三",
-    "style": "build",
+    "style": "typewriter",
     "text": [
       "有個人做了五百顆「歡喜丸」，據說吃了會快樂。",
       "他一次把五百顆全吃了。",
@@ -3892,13 +3887,8 @@
       "illustrations": [],
       "narration_url": null
     },
-    "floor_labels": [
-      "一顆",
-      "十顆",
-      "一百顆",
-      "五百顆",
-      "撐壞了"
-    ]
+    "floor_labels": [],
+    "questions": []
   },
   {
     "id": "BDH-066",
@@ -4731,7 +4721,7 @@
     "title": "裝瞎的騙子",
     "original_title": "詐稱眼盲喻",
     "source": "百喻經·卷四",
-    "style": "build",
+    "style": "qa",
     "text": [
       "有個人犯了罪，害怕被處罰。",
       "他靈機一動，假裝自己是瞎子，到處說：「我什麼都看不見啊！」",
@@ -4774,12 +4764,26 @@
       "illustrations": [],
       "narration_url": null
     },
-    "floor_labels": [
-      "犯罪",
-      "裝瞎",
-      "同情",
-      "露餡",
-      "雙重罪"
+    "floor_labels": [],
+    "questions": [
+      {
+        "q": "如果你犯了錯，你會選擇怎麼做？",
+        "choices": [
+          "坦白面對後果",
+          "找藉口掩飾",
+          "假裝什麼都沒發生"
+        ],
+        "ans": 0
+      },
+      {
+        "q": "裝瞎的人為什麼最終會露餡？",
+        "choices": [
+          "因為演技不夠好",
+          "因為謊言需要更多謊言來維持",
+          "因為運氣不好被看到"
+        ],
+        "ans": 1
+      }
     ]
   },
   {
@@ -5058,7 +5062,7 @@
     "title": "撿石頭丟鑽石",
     "original_title": "婦詐稱死喻",
     "source": "百喻經·卷四",
-    "style": "build",
+    "style": "ink",
     "text": [
       "有個人走在路上，手裡握著一顆珍貴的鑽石。",
       "他看到路邊有一塊閃亮的石頭，覺得好漂亮，就放下鑽石去撿那塊石頭。",
@@ -5100,13 +5104,8 @@
       "illustrations": [],
       "narration_url": null
     },
-    "floor_labels": [
-      "鑽石在手",
-      "看見閃光",
-      "放下鑽石",
-      "鑽石被撿",
-      "剩下碎片"
-    ]
+    "floor_labels": [],
+    "questions": []
   },
   {
     "id": "BDH-087",
@@ -5386,7 +5385,7 @@
     "title": "盲人摸象",
     "original_title": "盲人摸象喻",
     "source": "百喻經·卷四",
-    "style": "build",
+    "style": "qa",
     "text": [
       "有幾個盲人從來沒見過大象。國王牽了一頭大象讓他們摸。",
       "摸到腿的說：「大象就像一根柱子！」",
@@ -5431,12 +5430,26 @@
       "illustrations": [],
       "narration_url": null
     },
-    "floor_labels": [
-      "腿=柱子",
-      "耳=扇子",
-      "尾=繩子",
-      "身=牆壁",
-      "吵成一團"
+    "floor_labels": [],
+    "questions": [
+      {
+        "q": "如果你只能摸到大象的一個部位，你會怎麼描述大象？",
+        "choices": [
+          "我會謙虛地說我只摸到一部分",
+          "我會堅持我摸到的就是全貌",
+          "我會問問別人摸到了什麼"
+        ],
+        "ans": 2
+      },
+      {
+        "q": "在生活中，我們什麼時候最容易犯「盲人摸象」的錯誤？",
+        "choices": [
+          "只聽一方說法就下結論",
+          "只看表面就做判斷",
+          "以上皆是"
+        ],
+        "ans": 2
+      }
     ]
   },
   {
@@ -5719,7 +5732,7 @@
     "title": "一念清涼",
     "original_title": "煩惱即菩提喻",
     "source": "百喻經·卷四",
-    "style": "build",
+    "style": "ink",
     "text": [
       "有個修行者問師父：「師父，我心裡好煩，怎麼才能得到清涼？」",
       "師父說：「你煩的是什麼？」",
@@ -5771,12 +5784,7 @@
       "illustrations": [],
       "narration_url": null
     },
-    "floor_labels": [
-      "煩惱",
-      "看見煩惱",
-      "觀察者",
-      "烏雲與藍天",
-      "一念清涼"
-    ]
+    "floor_labels": [],
+    "questions": []
   }
 ]

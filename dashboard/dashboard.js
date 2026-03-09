@@ -177,10 +177,12 @@ function listenToEvents() {
             break;
 
           case 'mood_text_input':
+            const matchId = eventData.matchedStoryId || '-';
+            const matchTitle = eventData.matchedStoryTitle || getStoryTitle(matchId);
             textInputs.push({
               timestamp: event.timestamp || Date.now(),
               text: eventData.text || '',
-              matchedStoryId: eventData.matchedStoryId || '-'
+              matchedStory: matchId !== '-' ? matchTitle : '-'
             });
             break;
 
@@ -521,7 +523,7 @@ function updateRecentInputsTable(textInputs) {
       <tr>
         <td>${timeStr}</td>
         <td>${escapeHtml(entry.text)}</td>
-        <td>${entry.matchedStoryId}</td>
+        <td>${escapeHtml(entry.matchedStory)}</td>
       </tr>
     `;
   }).join('');
