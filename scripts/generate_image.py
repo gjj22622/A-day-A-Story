@@ -29,7 +29,7 @@ IMAGES_DIR = "images/stories"
 SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp']
 
 # Gemini API
-GEMINI_MODEL = "gemini-2.5-flash-preview-05-20"
+GEMINI_MODEL = "gemini-2.5-flash-image"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 # 圖片風格指引（品牌一致性）
