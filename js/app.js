@@ -112,7 +112,6 @@ function setupMoodTags() {
       // Track tag selection
       if (window.Analytics) {
         Analytics.track('mood_tag_select', { tags: Array.from(selectedTags) });
-        Analytics.trackDailyStats('mood_tag_select');
       }
     });
   });
@@ -165,7 +164,6 @@ function submitMood() {
   // Track text input
   if (window.Analytics && input) {
     Analytics.track('mood_text_input', { text: input });
-    Analytics.trackDailyStats('mood_text_input');
   }
 
   seekStory();
@@ -256,7 +254,6 @@ function goToMood() {
   // Track session start
   if (window.Analytics) {
     Analytics.track('session_start', {});
-    Analytics.trackDailyStats('session_start');
   }
 }
 
@@ -266,10 +263,12 @@ function renderStory(story) {
   container.innerHTML = '';
   container.className = 'story-container';
 
+  // 同步 currentStory 到 window，供 Social 模組使用
+  window.currentStory = story;
+
   // Track story view
   if (window.Analytics) {
     Analytics.track('story_view', { storyId: story.id, style: story.style, title: story.title });
-    Analytics.trackDailyStats('story_view');
   }
 
   // Render social share buttons after DOM is ready
@@ -610,7 +609,6 @@ function toggleOriginal() {
 function tryAnother() {
   if (window.Analytics) {
     Analytics.track('try_another', { fromStoryId: currentStory.id });
-    Analytics.trackDailyStats('try_another');
   }
   // Pick a different story randomly
   const others = stories.filter(s => s.id !== currentStory.id);

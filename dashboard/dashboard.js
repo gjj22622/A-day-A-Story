@@ -65,7 +65,9 @@ function listenToOnlineCount() {
 
   presenceRef.on('value', (snapshot) => {
     const data = snapshot.val() || {};
-    const onlineCount = Object.keys(data).filter(key => data[key].online === true).length;
+    // presence 結構: presence/{sessionId} = { timestamp, sessionId, userAgent, screenWidth }
+    // 只要存在就代表在線（Firebase onDisconnect 會自動移除）
+    const onlineCount = Object.keys(data).length;
     document.getElementById('online-count').textContent = onlineCount;
   });
 }
@@ -116,33 +118,45 @@ function listenToEvents() {
     const sharePlatforms = {};
     const textInputs = [];
 
-    Object.entries(events).forEach(([eventId, event]) => {
-      if (!event.type) return;
+    // events 結構: events/{date}/{pushId} = { eventName, data, timestamp, ... }
+    Object.entries(events).forEach(([date, dateEvents]) => {
+      if (!dateEvents || typeof dateEvents !== 'object') return;
 
-      switch (event.type) {
-        case 'story_view':
-          const storyId = event.storyId || '未知';
-          storyViews[storyId] = (storyViews[storyId] || 0) + 1;
-          break;
+      Object.entries(dateEvents).forEach(([pushId, event]) => {
+        if (!event || !event.eventName) return;
 
-        case 'mood_tag_select':
-          const tag = event.tag || '未知';
-          emotionTags[tag] = (emotionTags[tag] || 0) + 1;
-          break;
+        const eventData = event.data || {};
 
-        case 'share_click':
-          const platform = event.platform || '未知';
-          sharePlatforms[platform] = (sharePlatforms[platform] || 0) + 1;
-          break;
+        switch (event.eventName) {
+          case 'story_view':
+            const storyId = eventData.storyId || '未知';
+            storyViews[storyId] = (storyViews[storyId] || 0) + 1;
+            break;
 
-        case 'mood_text_input':
-          textInputs.push({
-            timestamp: event.timestamp || Date.now(),
-            text: event.text || '',
-            matchedStoryId: event.matchedStoryId || '-'
-          });
-          break;
-      }
+          case 'mood_tag_select':
+            // tags 是陣列，需要逐一計數
+            const tags = eventData.tags || [];
+            if (Array.isArray(tags)) {
+              tags.forEach(tag => {
+                emotionTags[tag] = (emotionTags[tag] || 0) + 1;
+              });
+            }
+            break;
+
+          case 'share_click':
+            const platform = eventData.platform || '未知';
+            sharePlatforms[platform] = (sharePlatforms[platform] || 0) + 1;
+            break;
+
+          case 'mood_text_input':
+            textInputs.push({
+              timestamp: event.timestamp || Date.now(),
+              text: eventData.text || '',
+              matchedStoryId: eventData.matchedStoryId || '-'
+            });
+            break;
+        }
+      });
     });
 
     // 更新所有圖表
