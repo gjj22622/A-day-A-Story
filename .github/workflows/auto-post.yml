@@ -1,0 +1,105 @@
+# 一念清涼 — Facebook 全自動發文 Workflow
+# 每日台灣時間 14:00 (UTC 06:00) 自動發文到 FB 粉專
+#
+# 需要在 GitHub Repo Settings > Secrets 設定：
+#   FB_PAGE_ID            — Facebook 粉絲專頁 ID
+#   FB_PAGE_ACCESS_TOKEN  — 長效 Page Access Token
+#
+# 手動觸發：Actions > Auto Post > Run workflow
+
+name: 🪷 一念清涼 Auto Post
+
+on:
+  schedule:
+    # 每日 UTC 06:00 = 台灣 14:00
+    - cron: '0 6 * * *'
+
+  # 支援手動觸發（可指定日期）
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '指定發文日期 (YYYY-MM-DD)，留空則使用今天'
+        required: false
+        default: ''
+      dry_run:
+        description: '乾跑模式（不實際發文）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  auto-post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 需要寫入 post_log.json 並 commit
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📤 執行自動發文
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+        run: |
+          cd ${{ github.workspace }}
+
+          # 組合參數
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+          fi
+
+          echo "🪷 一念清涼自動發文引擎啟動"
+          echo "   參數: $ARGS"
+          python scripts/auto_post.py $ARGS
+
+      - name: 📝 Commit 發文紀錄
+        if: always()  # 即使發文失敗也要記錄
+        run: |
+          cd ${{ github.workspace }}
+          git config user.name "一念清涼 Bot"
+          git config user.email "bot@yinian-qingliang.app"
+
+          # 只 commit 變更的日誌檔案
+          git add data/post_log.json data/content_calendar.json || true
+
+          if git diff --cached --quiet; then
+            echo "沒有新的發文紀錄需要 commit"
+          else
+            DATE=$(date -u +%Y-%m-%d)
+            git commit -m "📝 auto-post log: ${DATE}"
+            git push
+          fi
+
+  # ─── 每月 Token 健康檢查 ───
+  token-check:
+    runs-on: ubuntu-latest
+    # 每月 1 日 UTC 00:00 檢查
+    if: github.event.schedule == '0 6 * * *' && (github.event.schedule == '' || true)
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔑 檢查 Token 狀態
+        env:
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+        run: |
+          python scripts/auto_post.py --check-token
+        continue-on-error: true
