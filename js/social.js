@@ -79,21 +79,41 @@ const Social = (() => {
   };
 
   /**
-   * 在新視窗開啟 LINE 分享
+   * LINE 分享 — 根據裝置自動選擇最佳方式
+   * 手機：優先用 line:// URI scheme 直接呼叫 LINE app
+   * 桌機：用 LINE 官方分享頁 https://line.me/R/share
    * @param {Object} story - 故事物件
    */
   const shareToLine = (story) => {
     const url = getShareUrl(story);
     const text = generateShareText(story);
+    const shareMessage = text + '\n\n' + url;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // LINE 分享使用 url 和 text 參數
-    const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    if (isMobile) {
+      // 手機：用 line:// 直接開啟 LINE app
+      // 若未安裝 LINE，800ms 後降級到官方分享頁
+      const lineAppUrl = `line://msg/text/${encodeURIComponent(shareMessage)}`;
+      const webFallback = `https://line.me/R/share?text=${encodeURIComponent(shareMessage)}`;
 
-    window.open(
-      lineShareUrl,
-      'line-share',
-      'width=626,height=436,resizable=yes,toolbar=no,location=no'
-    );
+      const start = Date.now();
+      window.location.href = lineAppUrl;
+
+      // 若 app 有開啟，頁面會離開；若沒反應（未安裝），降級到網頁版
+      setTimeout(() => {
+        if (Date.now() - start < 1500) {
+          window.open(webFallback, '_blank');
+        }
+      }, 800);
+    } else {
+      // 桌機：開啟 LINE 官方分享頁（不需登入即可分享到手機 LINE）
+      const lineShareUrl = `https://line.me/R/share?text=${encodeURIComponent(shareMessage)}`;
+      window.open(
+        lineShareUrl,
+        'line-share',
+        'width=626,height=436,resizable=yes,toolbar=no,location=no'
+      );
+    }
 
     trackShareEvent('line', story.id);
   };
