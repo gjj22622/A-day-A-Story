@@ -9,5 +9,16 @@
     "post_id": null,
     "error": null,
     "timestamp": "2026-03-09T18:26:20.142980+08:00"
+  },
+  {
+    "date": "2026-03-10",
+    "story_id": "BDH-001",
+    "story_title": "只吃鹽的人",
+    "platform": "facebook",
+    "theme_week": "生活裡的過度與不足",
+    "status": "dry_run",
+    "post_id": null,
+    "error": null,
+    "timestamp": "2026-03-09T18:43:39.916659+08:00"
   }
 ]
