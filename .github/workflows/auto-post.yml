@@ -4,6 +4,7 @@
 # 需要在 GitHub Repo Settings > Secrets 設定：
 #   FB_PAGE_ID            — Facebook 粉絲專頁 ID
 #   FB_PAGE_ACCESS_TOKEN  — 長效 Page Access Token
+#   GEMINI_API_KEY        — Google AI Studio API Key（Gemini 產圖用）
 #
 # 手動觸發：Actions > Auto Post > Run workflow
 
@@ -49,6 +50,7 @@ jobs:
         env:
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd ${{ github.workspace }}
 
@@ -72,8 +74,8 @@ jobs:
           git config user.name "一念清涼 Bot"
           git config user.email "bot@yinian-qingliang.app"
 
-          # 只 commit 變更的日誌檔案
-          git add data/post_log.json data/content_calendar.json || true
+          # Commit 日誌與可能新增的圖片
+          git add data/post_log.json data/content_calendar.json images/stories/ || true
 
           if git diff --cached --quiet; then
             echo "沒有新的發文紀錄需要 commit"
@@ -82,24 +84,3 @@ jobs:
             git commit -m "📝 auto-post log: ${DATE}"
             git push
           fi
-
-  # ─── 每月 Token 健康檢查 ───
-  token-check:
-    runs-on: ubuntu-latest
-    # 每月 1 日 UTC 00:00 檢查
-    if: github.event.schedule == '0 6 * * *' && (github.event.schedule == '' || true)
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: 🔑 檢查 Token 狀態
-        env:
-          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
-        run: |
-          python scripts/auto_post.py --check-token
-        continue-on-error: true
