@@ -1,0 +1,29 @@
+# 一念清涼 — Token 健康檢查 Workflow
+# 每月 1 日自動檢查 FB Page Access Token 狀態
+
+name: 🔑 Token Health Check
+
+on:
+  schedule:
+    # 每月 1 日 UTC 00:00 = 台灣 08:00
+    - cron: '0 0 1 * *'
+
+  workflow_dispatch:
+
+jobs:
+  check-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔑 檢查 Token 狀態
+        env:
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+        run: |
+          python scripts/auto_post.py --check-token
