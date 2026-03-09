@@ -15,6 +15,20 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// 故事標題快取（從 stories.json 動態載入）
+let storyTitleMap = {};
+
+// 情緒標籤中文對照
+const emotionTagNames = {
+  'anxiety': '焦慮', 'fear': '恐懼', 'anger': '憤怒', 'sadness': '悲傷',
+  'grief': '哀痛', 'guilt': '自責', 'regret': '後悔', 'frustration': '挫折',
+  'loneliness': '孤獨', 'confusion': '困惑', 'exhaustion': '疲憊',
+  'jealousy': '嫉妒', 'resentment': '怨恨', 'despair': '絕望',
+  'self_doubt': '自我懷疑', 'shame': '羞恥', 'peace_seeking': '求靜',
+  'hope': '希望', 'gratitude': '感恩', 'joy': '喜悅', 'relief': '釋然',
+  'determination': '決心', 'curiosity': '好奇', 'love': '愛'
+};
+
 // 圖表實例儲存
 const charts = {
   storyPopularity: null,
@@ -41,10 +55,13 @@ const brandColors = {
 function initDashboard() {
   console.log('初始化儀錶板...');
 
+  // 先載入故事標題對照表
+  loadStoryTitles();
+
   // 監聽即時線上人數
   listenToOnlineCount();
 
-  // 監聽日期統計數據
+  // 監聯日期統計數據
   listenToDailyStats();
 
   // 監聽事件數據
@@ -244,7 +261,7 @@ function updateEmotionTagsChart(emotionTags) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8);
 
-  const labels = sorted.map(([tag]) => tag);
+  const labels = sorted.map(([tag]) => emotionTagNames[tag] || tag);
   const data = sorted.map(([, count]) => count);
 
   if (sorted.length === 0) {
@@ -494,20 +511,27 @@ function refreshCharts() {
 }
 
 /**
+ * 從 stories.json 載入所有故事標題
+ */
+function loadStoryTitles() {
+  fetch('../data/stories.json')
+    .then(res => res.json())
+    .then(stories => {
+      stories.forEach(story => {
+        storyTitleMap[story.id] = story.title || story.original_title || story.id;
+      });
+      console.log(`已載入 ${Object.keys(storyTitleMap).length} 則故事標題`);
+    })
+    .catch(err => {
+      console.warn('無法載入 stories.json，使用故事 ID 作為標題', err);
+    });
+}
+
+/**
  * 取得故事標題（來自故事 ID）
  */
 function getStoryTitle(storyId) {
-  // 此處可以從 stories.json 載入故事資訊
-  // 目前暫時使用故事 ID 作為標題
-  const storyTitles = {
-    'BDH-001': '愚人食鹽喻',
-    'BDH-002': '煮黑石蜜漿喻',
-    'BDH-003': '入海取沉水喻',
-    'BDH-004': '渴見水喻',
-    'BDH-005': '三重樓喻'
-    // 可根據需要擴展
-  };
-  return storyTitles[storyId] || storyId;
+  return storyTitleMap[storyId] || storyId;
 }
 
 /**
