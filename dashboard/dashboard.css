@@ -13,6 +13,93 @@
   --transition: all 0.3s ease;
 }
 
+/* ===== LOGIN OVERLAY ===== */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--deep-indigo);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.login-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.login-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.4rem;
+  color: var(--lotus-gold);
+  margin-bottom: 0.4rem;
+}
+.login-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+.login-field {
+  text-align: left;
+  margin-bottom: 1.2rem;
+}
+.login-field label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--moonlight);
+  margin-bottom: 0.4rem;
+}
+.login-field input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--cloud);
+  font-size: 1rem;
+  font-family: 'Noto Sans TC', sans-serif;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.login-field input:focus {
+  border-color: var(--lotus-gold);
+}
+.login-field input::placeholder {
+  color: var(--muted);
+}
+.login-error {
+  color: #e57373;
+  font-size: 0.85rem;
+  min-height: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+.login-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--lotus-gold);
+  color: var(--deep-indigo);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.login-btn:hover {
+  background: #c89560;
+  box-shadow: 0 4px 12px rgba(212,165,116,0.3);
+}
+
 /* 全域樣式 */
 * {
   margin: 0;

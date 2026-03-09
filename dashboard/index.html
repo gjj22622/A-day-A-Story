@@ -14,8 +14,29 @@
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
+  <!-- 登入遮罩 -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-icon">🪷</div>
+      <h2 class="login-title">一念清涼 管理儀錶板</h2>
+      <p class="login-subtitle">請輸入管理者帳號密碼</p>
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <div class="login-field">
+          <label for="loginUser">帳號</label>
+          <input type="text" id="loginUser" placeholder="請輸入帳號" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label for="loginPass">密碼</label>
+          <input type="password" id="loginPass" placeholder="請輸入密碼" autocomplete="current-password" required>
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button type="submit" class="login-btn">登入</button>
+      </form>
+    </div>
+  </div>
+
   <!-- 頁首 -->
-  <header class="dashboard-header">
+  <header class="dashboard-header" style="display:none;" id="dashboardHeader">
     <div class="header-container">
       <h1 class="header-title">一念清涼 管理儀錶板</h1>
       <a href="../index.html" class="header-link">← 返回主站</a>
@@ -23,7 +44,7 @@
   </header>
 
   <!-- 主要容器 -->
-  <main class="dashboard-container">
+  <main class="dashboard-container" style="display:none;" id="dashboardMain">
 
     <!-- 統計概覽區塊 -->
     <section class="stats-overview">
@@ -130,7 +151,7 @@
   </main>
 
   <!-- 頁尾 -->
-  <footer class="dashboard-footer">
+  <footer class="dashboard-footer" style="display:none;" id="dashboardFooter">
     <p>一念清涼 © 2026 | 資料來源：Firebase Realtime Database</p>
   </footer>
 
@@ -140,6 +161,56 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Login & Auth -->
+  <script>
+    const AUTH_USER = 'Admin';
+    const AUTH_HASH = 'ea34564517d272f65dadf8347081041d337076b0dff46f72ca2bc3643b6222d4';
+
+    async function sha256(text) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      const errorEl = document.getElementById('loginError');
+
+      if (user !== AUTH_USER) {
+        errorEl.textContent = '帳號或密碼錯誤';
+        return false;
+      }
+
+      const passHash = await sha256(pass);
+      if (passHash !== AUTH_HASH) {
+        errorEl.textContent = '帳號或密碼錯誤';
+        return false;
+      }
+
+      // Auth success
+      try { sessionStorage.setItem('yinian_dashboard_auth', 'true'); } catch(e) {}
+      showDashboard();
+      return false;
+    }
+
+    function showDashboard() {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('dashboardHeader').style.display = '';
+      document.getElementById('dashboardMain').style.display = '';
+      document.getElementById('dashboardFooter').style.display = '';
+    }
+
+    // Check if already logged in this session
+    try {
+      if (sessionStorage.getItem('yinian_dashboard_auth') === 'true') {
+        showDashboard();
+      }
+    } catch(e) {}
+  </script>
 
   <!-- Dashboard JavaScript -->
   <script src="dashboard.js"></script>
