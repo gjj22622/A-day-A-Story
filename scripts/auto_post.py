@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""
+一念清涼 — Facebook 全自動發文引擎
+從 content_calendar.json 讀取今日排程，透過 Meta Graph API 發文到 FB 粉專
+
+使用方式：
+  python auto_post.py                    # 正式發文
+  python auto_post.py --dry-run          # 乾跑模式（不實際發文）
+  python auto_post.py --date 2026-03-15  # 指定日期發文（測試用）
+  python auto_post.py --check-token      # 檢查 Token 狀態
+
+環境變數（存在 GitHub Secrets）：
+  FB_PAGE_ID          — Facebook 粉絲專頁 ID
+  FB_PAGE_ACCESS_TOKEN — 長效 Page Access Token
+  NOTIFICATION_EMAIL   — 發文失敗通知信箱（選用）
+"""
+
+import json
+import os
+import sys
+import argparse
+import urllib.request
+import urllib.parse
+import urllib.error
+from datetime import datetime, timezone, timedelta
+
+# ─────────────────────────────────────────────
+# 配置
+# ─────────────────────────────────────────────
+
+GRAPH_API_VERSION = "v25.0"
+GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
+
+# 檔案路徑（相對於 repo 根目錄）
+CALENDAR_PATH = "data/content_calendar.json"
+STORIES_PATH = "data/stories.json"
+POST_LOG_PATH = "data/post_log.json"
+
+# 台灣時區 UTC+8
+TW_TZ = timezone(timedelta(hours=8))
+
+
+# ─────────────────────────────────────────────
+# Graph API 操作
+# ─────────────────────────────────────────────
+
+def fb_post(page_id, access_token, message, link=None):
+    """
+    透過 Graph API 發文到 Facebook 粉專
+    回傳 post_id 或拋出例外
+    """
+    url = f"{GRAPH_API_BASE}/{page_id}/feed"
+    data = {
+        "message": message,
+        "access_token": access_token,
+    }
+    if link:
+        data["link"] = link
+
+    encoded = urllib.parse.urlencode(data).encode('utf-8')
+    req = urllib.request.Request(url, data=encoded, method='POST')
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return result.get('id')
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        raise Exception(f"FB API Error {e.code}: {error_body}")
+
+
+def check_token(access_token):
+    """
+    檢查 Page Access Token 的狀態和到期時間
+    """
+    url = f"{GRAPH_API_BASE}/debug_token?input_token={access_token}&access_token={access_token}"
+    req = urllib.request.Request(url)
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            data = result.get('data', {})
+            is_valid = data.get('is_valid', False)
+            expires_at = data.get('expires_at', 0)
+
+            if expires_at == 0:
+                expiry_str = "永不過期（長效 Token）"
+                days_left = 999
+            else:
+                expiry = datetime.fromtimestamp(expires_at, tz=TW_TZ)
+                days_left = (expiry - datetime.now(TW_TZ)).days
+                expiry_str = f"{expiry.strftime('%Y-%m-%d %H:%M')} TW ({days_left} 天後)"
+
+            return {
+                "is_valid": is_valid,
+                "expires_at": expiry_str,
+                "days_left": days_left,
+                "scopes": data.get('scopes', []),
+                "type": data.get('type', 'unknown'),
+            }
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        return {"is_valid": False, "error": error_body}
+
+
+def extend_token(app_id, app_secret, short_token):
+    """
+    將短期 Token 延展為長效 Token（60 天）
+    """
+    url = (
+        f"{GRAPH_API_BASE}/oauth/access_token"
+        f"?grant_type=fb_exchange_token"
+        f"&client_id={app_id}"
+        f"&client_secret={app_secret}"
+        f"&fb_exchange_token={short_token}"
+    )
+    req = urllib.request.Request(url)
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+            return result.get('access_token')
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        raise Exception(f"Token 延展失敗: {error_body}")
+
+
+# ─────────────────────────────────────────────
+# 核心邏輯
+# ─────────────────────────────────────────────
+
+def load_json(path):
+    """載入 JSON 檔案"""
+    if not os.path.exists(path):
+        return None
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def save_json(path, data):
+    """儲存 JSON 檔案"""
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def get_today_entry(calendar, target_date=None):
+    """
+    從排程日曆中找出今天的貼文
+    """
+    if target_date is None:
+        today = datetime.now(TW_TZ).strftime('%Y-%m-%d')
+    else:
+        today = target_date
+
+    for entry in calendar.get('calendar', []):
+        if entry['date'] == today:
+            return entry
+    return None
+
+
+def is_already_posted(post_log, date_str):
+    """
+    冪等保護：檢查今天是否已經發過文
+    """
+    for log in post_log:
+        if log.get('date') == date_str and log.get('status') == 'success':
+            return True
+    return False
+
+
+def get_story_content(stories, story_id, platform='facebook'):
+    """
+    從 stories.json 取得指定故事的社群文案
+    """
+    for story in stories:
+        if story['id'] == story_id:
+            return {
+                'message': story['social'].get(platform, ''),
+                'title': story['title'],
+                'icon': story['icon'],
+                'link': f"https://gjj22622.github.io/A-day-A-Story/?story={story_id}"
+            }
+    return None
+
+
+def log_post(post_log_path, entry, result):
+    """
+    記錄發文結果到 post_log.json
+    """
+    log = load_json(post_log_path) or []
+    log.append({
+        "date": entry['date'],
+        "story_id": entry['story_id'],
+        "story_title": entry['story_title'],
+        "platform": entry['platform'],
+        "theme_week": entry.get('theme', ''),
+        "status": result['status'],
+        "post_id": result.get('post_id'),
+        "error": result.get('error'),
+        "timestamp": datetime.now(TW_TZ).isoformat(),
+    })
+    save_json(post_log_path, log)
+
+
+# ─────────────────────────────────────────────
+# 主程式
+# ─────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(description='一念清涼 Facebook 自動發文引擎')
+    parser.add_argument('--dry-run', action='store_true', help='乾跑模式，不實際發文')
+    parser.add_argument('--date', type=str, help='指定發文日期 (YYYY-MM-DD)')
+    parser.add_argument('--check-token', action='store_true', help='檢查 Token 狀態')
+    args = parser.parse_args()
+
+    # 環境變數
+    page_id = os.environ.get('FB_PAGE_ID', '')
+    access_token = os.environ.get('FB_PAGE_ACCESS_TOKEN', '')
+
+    # ─── 檢查 Token 模式 ───
+    if args.check_token:
+        if not access_token:
+            print("❌ 未設定 FB_PAGE_ACCESS_TOKEN 環境變數")
+            sys.exit(1)
+        info = check_token(access_token)
+        print("🔑 Token 狀態：")
+        for k, v in info.items():
+            print(f"   {k}: {v}")
+        if info.get('days_left', 0) < 15 and info.get('days_left', 0) != 999:
+            print("⚠️ Token 即將到期，請儘快延展！")
+            sys.exit(2)
+        sys.exit(0)
+
+    # ─── 載入資料 ───
+    calendar = load_json(CALENDAR_PATH)
+    if not calendar:
+        print("❌ 找不到 content_calendar.json")
+        sys.exit(1)
+
+    stories = load_json(STORIES_PATH)
+    if not stories:
+        print("❌ 找不到 stories.json")
+        sys.exit(1)
+
+    post_log = load_json(POST_LOG_PATH) or []
+
+    # ─── 找今日排程 ───
+    target_date = args.date or datetime.now(TW_TZ).strftime('%Y-%m-%d')
+    entry = get_today_entry(calendar, target_date)
+
+    if not entry:
+        print(f"📅 {target_date}：今天沒有排程貼文")
+        sys.exit(0)
+
+    print(f"📅 {target_date} ({entry['weekday']})")
+    print(f"📖 {entry['story_icon']} {entry['story_title']} ({entry['story_id']})")
+    print(f"🏷️ 主題週：{entry.get('theme', 'N/A')}")
+
+    # ─── 冪等檢查 ───
+    if is_already_posted(post_log, target_date):
+        print("✅ 今天已經發過文了，跳過（冪等保護）")
+        sys.exit(0)
+
+    # ─── 取得文案 ───
+    content = get_story_content(stories, entry['story_id'], entry['platform'])
+    if not content or not content['message']:
+        print(f"❌ 找不到 {entry['story_id']} 的 {entry['platform']} 文案")
+        sys.exit(1)
+
+    print(f"\n{'─'*50}")
+    print(f"【貼文預覽】")
+    print(content['message'][:300] + '...' if len(content['message']) > 300 else content['message'])
+    print(f"{'─'*50}")
+
+    # ─── 乾跑模式 ───
+    if args.dry_run:
+        print("\n🧪 乾跑模式：不會實際發文")
+        result = {
+            "status": "dry_run",
+            "post_id": None,
+        }
+        log_post(POST_LOG_PATH, entry, result)
+        print("✅ 乾跑完成，已記錄到 post_log.json")
+        sys.exit(0)
+
+    # ─── 正式發文 ───
+    if not page_id or not access_token:
+        print("❌ 未設定 FB_PAGE_ID 或 FB_PAGE_ACCESS_TOKEN")
+        print("   請在 GitHub Secrets 中設定這兩個環境變數")
+        sys.exit(1)
+
+    # 嘗試發文（含重試）
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            print(f"\n📤 發文中... (嘗試 {attempt + 1}/{max_retries})")
+            post_id = fb_post(
+                page_id=page_id,
+                access_token=access_token,
+                message=content['message'],
+                link=content['link']
+            )
+            print(f"✅ 發文成功！Post ID: {post_id}")
+
+            result = {
+                "status": "success",
+                "post_id": post_id,
+            }
+            log_post(POST_LOG_PATH, entry, result)
+
+            # 更新排程狀態
+            for cal_entry in calendar['calendar']:
+                if cal_entry['date'] == target_date:
+                    cal_entry['status'] = 'posted'
+                    break
+            save_json(CALENDAR_PATH, calendar)
+
+            sys.exit(0)
+
+        except Exception as e:
+            print(f"❌ 發文失敗：{e}")
+            if attempt < max_retries - 1:
+                print("   5 秒後重試...")
+                import time
+                time.sleep(5)
+
+    # 所有重試都失敗
+    print("\n❌ 所有重試都失敗")
+    result = {
+        "status": "failed",
+        "error": str(e),
+    }
+    log_post(POST_LOG_PATH, entry, result)
+    sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
