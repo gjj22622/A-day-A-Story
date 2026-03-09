@@ -155,7 +155,7 @@ function submitMood() {
       s._inputScore = 0;
       s.keywords.forEach(kw => {
         if (input.includes(kw)) {
-          s._inputScore += 3;
+          s._inputScore += 1.5; // 降低權重，避免單一故事因 keyword 獨佔常見詞而壟斷
         }
       });
     });
