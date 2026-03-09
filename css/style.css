@@ -709,3 +709,29 @@ a { color: inherit; text-decoration: none; }
   to { opacity: 0; transform: translateY(-10px); }
 }
 .fade-in { animation: fadeInUp 0.6s ease forwards; }
+
+/* ===== SOCIAL SHARE SECTION ===== */
+.share-section {
+  margin: 2rem 0;
+  text-align: center;
+}
+.share-section .share-label {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+}
+.share-section .share-buttons-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.share-section button {
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.share-section button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}

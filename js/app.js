@@ -41,6 +41,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     console.log(`✅ Loaded ${stories.length} stories, ${Object.keys(keywordMap).length} keywords`);
+
+    // Initialize analytics
+    if (window.Analytics) {
+      try { Analytics.init(); } catch(e) { console.warn('Analytics init failed:', e); }
+    }
+
+    // Check URL parameter for direct story link (?story=BDH-001)
+    const urlParams = new URLSearchParams(window.location.search);
+    const storyParam = urlParams.get('story');
+    if (storyParam) {
+      const directStory = stories.find(s => s.id === storyParam);
+      if (directStory) {
+        currentStory = directStory;
+        initializeUI();
+        renderStory(currentStory);
+        showScreen('story-screen');
+        if (window.Analytics) Analytics.track('story_view', { storyId: directStory.id, style: directStory.style, title: directStory.title, source: 'direct_link' });
+        return; // Skip normal flow
+      }
+    }
+
     initializeUI();
   } catch (error) {
     console.error('Error loading data:', error);
@@ -87,6 +108,12 @@ function setupMoodTags() {
         }
       });
       updateSeekBtn();
+
+      // Track tag selection
+      if (window.Analytics) {
+        Analytics.track('mood_tag_select', { tags: Array.from(selectedTags) });
+        Analytics.trackDailyStats('mood_tag_select');
+      }
     });
   });
 }
@@ -133,6 +160,12 @@ function submitMood() {
         }
       });
     });
+  }
+
+  // Track text input
+  if (window.Analytics && input) {
+    Analytics.track('mood_text_input', { text: input });
+    Analytics.trackDailyStats('mood_text_input');
   }
 
   seekStory();
@@ -219,6 +252,12 @@ function goToMood() {
   updateSeekBtn();
 
   showScreen('mood-select');
+
+  // Track session start
+  if (window.Analytics) {
+    Analytics.track('session_start', {});
+    Analytics.trackDailyStats('session_start');
+  }
 }
 
 // ===== STORY RENDERERS =====
@@ -226,6 +265,20 @@ function renderStory(story) {
   const container = document.getElementById('storyContainer');
   container.innerHTML = '';
   container.className = 'story-container';
+
+  // Track story view
+  if (window.Analytics) {
+    Analytics.track('story_view', { storyId: story.id, style: story.style, title: story.title });
+    Analytics.trackDailyStats('story_view');
+  }
+
+  // Render social share buttons after DOM is ready
+  setTimeout(() => {
+    const shareSection = document.getElementById('shareSection');
+    if (shareSection && window.Social) {
+      Social.renderShareButtons(story, shareSection);
+    }
+  }, 100);
 
   switch (story.style) {
     case 'ink':
@@ -414,6 +467,7 @@ function typewriterSkip() {
     clearInterval(typewriterInterval);
     typewriterInterval = null;
   }
+  if (window.Analytics) Analytics.track('story_interact', { type: 'typewriter_skip', storyId: currentStory.id });
   const story = currentStory;
   const area = document.getElementById('typewriterArea');
   area.innerHTML = story.text.join('\n\n').replace(/\n/g, '<br>');
@@ -537,10 +591,10 @@ function buildMoralHTML(story) {
       </div>
       <button class="original-toggle" onclick="toggleOriginal()">📜 查看原典文言文</button>
       <div class="original-text" id="originalText">${story.original_text}</div>
+      <div class="share-section" id="shareSection"></div>
       <div class="action-row">
         <button class="action-btn primary" onclick="tryAnother()">🪷 再抽一則</button>
         <button class="action-btn" onclick="goToMood()">換個心情</button>
-        <button class="action-btn" onclick="shareStory()">分享給朋友</button>
       </div>
     </div>
   `;
@@ -550,9 +604,14 @@ function buildMoralHTML(story) {
 function toggleOriginal() {
   const el = document.getElementById('originalText');
   el.classList.toggle('show');
+  if (window.Analytics) Analytics.track('original_toggle', { storyId: currentStory.id });
 }
 
 function tryAnother() {
+  if (window.Analytics) {
+    Analytics.track('try_another', { fromStoryId: currentStory.id });
+    Analytics.trackDailyStats('try_another');
+  }
   // Pick a different story randomly
   const others = stories.filter(s => s.id !== currentStory.id);
   currentStory = others[Math.floor(Math.random() * others.length)];
@@ -569,20 +628,16 @@ function tryAnother() {
 }
 
 function shareStory() {
-  const text = `${currentStory.icon} ${currentStory.title}\n\n「${currentStory.moral}」\n\n${currentStory.reflection}\n\n—— 一念清涼 🪷`;
-
-  if (navigator.share) {
-    navigator.share({
-      title: '一念清涼 — ' + currentStory.title,
-      text: text
-    }).catch(err => console.log('Share cancelled or failed:', err));
+  if (window.Social) {
+    Social.nativeShare(currentStory);
   } else {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('已複製到剪貼簿！可以貼給朋友了 🪷');
-    }).catch(err => {
-      console.error('Copy failed:', err);
-      alert('複製失敗，請重試');
-    });
+    // Fallback if Social module not loaded
+    const text = `${currentStory.icon} ${currentStory.title}\n\n「${currentStory.moral}」\n\n${currentStory.reflection}\n\n—— 一念清涼 🪷`;
+    if (navigator.share) {
+      navigator.share({ title: '一念清涼 — ' + currentStory.title, text: text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => alert('已複製到剪貼簿！')).catch(() => alert('複製失敗'));
+    }
   }
 }
 
