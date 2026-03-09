@@ -1,7 +1,7 @@
 {
   "_description": "中文關鍵字 → 情緒/情境/主題標籤對照表。網站根據使用者輸入的文字，比對此表來找到對應的標籤，再用標籤去匹配故事。",
-  "_version": "1.0",
-  "_updated": "2026-03-08",
+  "_version": "1.1",
+  "_updated": "2026-03-09",
   "mappings": {
     "焦慮": ["anxiety"], "緊張": ["anxiety"], "不安": ["anxiety", "fear"],
     "害怕": ["fear"], "恐懼": ["fear"], "擔心": ["fear", "anxiety"],
@@ -51,6 +51,49 @@
     "否認": ["self_awareness", "acceptance"],
     "計較": ["letting_go", "perspective_shift"],
     "短視": ["wisdom_over_knowledge", "patience"],
-    "衝動": ["self_awareness", "patience"]
+    "衝動": ["self_awareness", "patience"],
+
+    "生病": ["health_concern", "fear", "sadness"],
+    "親人": ["relationship_family", "grief"],
+    "健康": ["health_concern", "fear"],
+    "身體": ["health_concern", "exhaustion"],
+    "病": ["health_concern", "fear", "sadness"],
+
+    "股票": ["financial_difficulty", "anxiety", "frustration"],
+    "賠錢": ["financial_difficulty", "frustration", "regret"],
+    "投資": ["financial_difficulty", "life_decision"],
+    "錢": ["financial_difficulty", "anxiety"],
+    "負債": ["financial_difficulty", "despair"],
+    "破產": ["financial_difficulty", "despair"],
+    "虧": ["financial_difficulty", "frustration", "regret"],
+
+    "思念": ["grief", "loneliness", "sadness"],
+    "想念": ["grief", "loneliness", "sadness"],
+    "懷念": ["grief", "sadness"],
+
+    "興奮": ["joy", "hope", "motivation"],
+    "開心": ["joy", "gratitude"],
+    "快樂": ["joy", "gratitude"],
+    "期待": ["hope", "motivation"],
+    "幸福": ["joy", "gratitude", "peace_seeking"],
+
+    "代理": ["career_decision", "anxiety", "loss"],
+    "被取代": ["career_failure", "fear", "self_doubt"],
+    "裁員": ["career_failure", "fear", "financial_difficulty"],
+    "失業": ["career_failure", "financial_difficulty", "despair"],
+
+    "悶": ["frustration", "sadness", "exhaustion"],
+    "鬱悶": ["sadness", "despair"],
+    "無聊": ["confusion", "frustration"],
+    "空虛": ["loneliness", "confusion"],
+    "迷惑": ["confusion"],
+    "糾結": ["confusion", "life_decision"],
+    "心煩": ["frustration", "anxiety"],
+    "煩躁": ["frustration", "anger"],
+    "受傷": ["sadness", "betrayal"],
+    "心痛": ["sadness", "grief"],
+    "無奈": ["frustration", "acceptance"],
+    "委曲": ["resentment"],
+    "AI": ["anxiety", "change_transition", "fear"]
   }
 }
