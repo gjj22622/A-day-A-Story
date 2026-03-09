@@ -373,6 +373,9 @@ function renderQA(story, container) {
       html += `</div>`;
     } else if (i === story.text.length - 1) {
       html += `<button class="qa-next" onclick="qaFinish()">看見寓意 🪷</button>`;
+    } else {
+      // No question for this step — add a continue button so user can advance
+      html += `<button class="qa-next" onclick="qaAdvance(${i})">繼續 ▸</button>`;
     }
     html += `</div>`;
   });
@@ -403,6 +406,16 @@ function qaChoose(stepIdx, choiceIdx) {
     const next = steps[stepIdx + 1];
     if (next) next.classList.add('active');
   }, 1200);
+}
+
+function qaAdvance(stepIdx) {
+  const steps = document.querySelectorAll('.qa-step');
+  steps[stepIdx].classList.remove('active');
+  const next = steps[stepIdx + 1];
+  if (next) {
+    next.classList.add('active');
+    next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 function qaFinish() {
@@ -723,6 +736,7 @@ window.submitMood = submitMood;
 window.seekStory = seekStory;
 window.goToMood = goToMood;
 window.qaChoose = qaChoose;
+window.qaAdvance = qaAdvance;
 window.qaFinish = qaFinish;
 window.typewriterSkip = typewriterSkip;
 window.lightLine = lightLine;
