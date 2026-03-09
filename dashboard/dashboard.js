@@ -55,23 +55,23 @@ const brandColors = {
 function initDashboard() {
   console.log('初始化儀錶板...');
 
-  // 先載入故事標題對照表
-  loadStoryTitles();
+  // 先載入故事標題對照表，完成後再監聽事件
+  loadStoryTitles().then(() => {
+    // 監聽即時線上人數
+    listenToOnlineCount();
 
-  // 監聽即時線上人數
-  listenToOnlineCount();
+    // 監聽日期統計數據
+    listenToDailyStats();
 
-  // 監聯日期統計數據
-  listenToDailyStats();
+    // 監聽事件數據
+    listenToEvents();
 
-  // 監聽事件數據
-  listenToEvents();
-
-  // 設定自動刷新（30 秒）
-  setInterval(() => {
-    console.log('自動刷新數據...');
-    refreshCharts();
-  }, 30000);
+    // 設定自動刷新（30 秒）
+    setInterval(() => {
+      console.log('自動刷新數據...');
+      refreshCharts();
+    }, 30000);
+  });
 }
 
 /**
@@ -511,10 +511,10 @@ function refreshCharts() {
 }
 
 /**
- * 從 stories.json 載入所有故事標題
+ * 從 stories.json 載入所有故事標題（回傳 Promise）
  */
 function loadStoryTitles() {
-  fetch('../data/stories.json')
+  return fetch('../data/stories.json')
     .then(res => res.json())
     .then(stories => {
       stories.forEach(story => {
