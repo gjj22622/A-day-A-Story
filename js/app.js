@@ -577,6 +577,57 @@ function buildNext() {
   }
 }
 
+// ===== RANDOM STORY =====
+function randomStory() {
+  if (stories.length === 0) return;
+
+  // Track random story request
+  if (window.Analytics) {
+    Analytics.track('random_story', {});
+  }
+
+  // Pick a truly random story
+  currentStory = stories[Math.floor(Math.random() * stories.length)];
+
+  // Reset states
+  litCount = 0;
+  buildIdx = 0;
+  if (typewriterInterval) {
+    clearInterval(typewriterInterval);
+    typewriterInterval = null;
+  }
+
+  showTransition();
+}
+
+// ===== MOOD FEEDBACK =====
+function submitFeedback(feedbackType) {
+  if (!currentStory) return;
+
+  // Track feedback event
+  if (window.Analytics) {
+    Analytics.track('mood_feedback', {
+      storyId: currentStory.id,
+      storyTitle: currentStory.title,
+      feedbackType: feedbackType
+    });
+  }
+
+  // Visual feedback — highlight selected and show thanks
+  const btns = document.querySelectorAll('.feedback-btn');
+  btns.forEach(btn => {
+    btn.style.pointerEvents = 'none';
+    if (btn.dataset.feedback === feedbackType) {
+      btn.classList.add('selected');
+    } else {
+      btn.style.opacity = '0.3';
+    }
+  });
+
+  const thanks = document.getElementById('feedbackThanks');
+  if (thanks) thanks.classList.add('show');
+}
+
 // ===== SHARED MORAL SECTION =====
 function buildMoralHTML(story) {
   return `
@@ -591,6 +642,29 @@ function buildMoralHTML(story) {
       <button class="original-toggle" onclick="toggleOriginal()">📜 查看原典文言文</button>
       <div class="original-text" id="originalText">${story.original_text}</div>
       <div class="share-section" id="shareSection"></div>
+      <div class="feedback-section" id="feedbackSection">
+        <div class="feedback-title">讀完這則故事，你的感受是？</div>
+        <div class="feedback-subtitle">你的回饋將幫助我們為更多人帶來一念清涼</div>
+        <div class="feedback-options">
+          <button class="feedback-btn" data-feedback="peace" onclick="submitFeedback('peace')">
+            <span class="feedback-icon">🧘</span>
+            <span>感到平靜</span>
+          </button>
+          <button class="feedback-btn" data-feedback="enlightened" onclick="submitFeedback('enlightened')">
+            <span class="feedback-icon">💡</span>
+            <span>得到開示</span>
+          </button>
+          <button class="feedback-btn" data-feedback="insight" onclick="submitFeedback('insight')">
+            <span class="feedback-icon">🪷</span>
+            <span>有所體悟</span>
+          </button>
+          <button class="feedback-btn" data-feedback="thinking" onclick="submitFeedback('thinking')">
+            <span class="feedback-icon">🤔</span>
+            <span>仍在思考</span>
+          </button>
+        </div>
+        <div class="feedback-thanks" id="feedbackThanks">感謝你的回饋 🙏 願你帶著這份清涼前行</div>
+      </div>
       <div class="action-row">
         <button class="action-btn primary" onclick="tryAnother()">🪷 再抽一則</button>
         <button class="action-btn" onclick="goToMood()">換個心情</button>
@@ -651,3 +725,5 @@ window.buildNext = buildNext;
 window.toggleOriginal = toggleOriginal;
 window.tryAnother = tryAnother;
 window.shareStory = shareStory;
+window.randomStory = randomStory;
+window.submitFeedback = submitFeedback;

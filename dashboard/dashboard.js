@@ -34,7 +34,9 @@ const charts = {
   storyPopularity: null,
   emotionTags: null,
   sharePlatforms: null,
-  dailyTrend: null
+  dailyTrend: null,
+  feedback: null,
+  storyFeedback: null
 };
 
 // 色彩配置
@@ -104,6 +106,9 @@ function listenToDailyStats() {
     let totalSessions = 0;
     let todayViews = 0;
 
+    let todayFeedback = 0;
+    let todayRandom = 0;
+
     Object.entries(data).forEach(([date, stats]) => {
       const sessionCount = stats.session_start || 0;
       totalSessions += sessionCount;
@@ -111,12 +116,16 @@ function listenToDailyStats() {
       if (date === today) {
         todaySessions = sessionCount;
         todayViews = stats.story_view || 0;
+        todayFeedback = stats.mood_feedback || 0;
+        todayRandom = stats.random_story || 0;
       }
     });
 
     document.getElementById('today-sessions').textContent = todaySessions;
     document.getElementById('total-sessions').textContent = totalSessions;
     document.getElementById('today-views').textContent = todayViews;
+    document.getElementById('today-feedback').textContent = todayFeedback;
+    document.getElementById('today-random').textContent = todayRandom;
   });
 }
 
@@ -134,6 +143,8 @@ function listenToEvents() {
     const emotionTags = {};
     const sharePlatforms = {};
     const textInputs = [];
+    const feedbackCounts = {};
+    const storyFeedbackMap = {};
 
     // events 結構: events/{date}/{pushId} = { eventName, data, timestamp, ... }
     Object.entries(events).forEach(([date, dateEvents]) => {
@@ -172,6 +183,19 @@ function listenToEvents() {
               matchedStoryId: eventData.matchedStoryId || '-'
             });
             break;
+
+          case 'mood_feedback':
+            const fbType = eventData.feedbackType || '未知';
+            feedbackCounts[fbType] = (feedbackCounts[fbType] || 0) + 1;
+            // 追蹤每則故事的回饋效果
+            const fbStoryId = eventData.storyId || '未知';
+            if (!storyFeedbackMap[fbStoryId]) {
+              storyFeedbackMap[fbStoryId] = { peace: 0, enlightened: 0, insight: 0, thinking: 0 };
+            }
+            if (storyFeedbackMap[fbStoryId][fbType] !== undefined) {
+              storyFeedbackMap[fbStoryId][fbType]++;
+            }
+            break;
         }
       });
     });
@@ -181,6 +205,8 @@ function listenToEvents() {
     updateEmotionTagsChart(emotionTags);
     updateSharePlatformsChart(sharePlatforms);
     updateRecentInputsTable(textInputs);
+    updateFeedbackChart(feedbackCounts);
+    updateStoryFeedbackChart(storyFeedbackMap);
   });
 
   // 監聽過去 30 天的日期統計
@@ -499,6 +525,153 @@ function updateRecentInputsTable(textInputs) {
       </tr>
     `;
   }).join('');
+}
+
+/**
+ * 更新心情回饋圖表
+ */
+function updateFeedbackChart(feedbackCounts) {
+  const feedbackLabels = {
+    'peace': '🧘 感到平靜',
+    'enlightened': '💡 得到開示',
+    'insight': '🪷 有所體悟',
+    'thinking': '🤔 仍在思考'
+  };
+
+  const order = ['peace', 'enlightened', 'insight', 'thinking'];
+  const labels = order.map(k => feedbackLabels[k] || k);
+  const data = order.map(k => feedbackCounts[k] || 0);
+
+  if (data.every(d => d === 0)) {
+    document.getElementById('feedback-empty').classList.add('show');
+    return;
+  } else {
+    document.getElementById('feedback-empty').classList.remove('show');
+  }
+
+  const ctx = document.getElementById('feedback-chart');
+  if (charts.feedback) charts.feedback.destroy();
+
+  charts.feedback = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: [
+          'rgba(42, 107, 94, 0.8)',
+          'rgba(212, 165, 116, 0.8)',
+          'rgba(192, 214, 223, 0.8)',
+          'rgba(122, 139, 154, 0.6)'
+        ],
+        borderColor: brandColors.indigo,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: brandColors.moonlight,
+            font: { family: "'Noto Sans TC', sans-serif", size: 13 },
+            padding: 15
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * 更新故事回饋效果排行圖表
+ */
+function updateStoryFeedbackChart(storyFeedbackMap) {
+  // 計算每個故事的「正向回饋率」(peace + enlightened + insight)
+  const storyScores = Object.entries(storyFeedbackMap).map(([storyId, counts]) => {
+    const total = counts.peace + counts.enlightened + counts.insight + counts.thinking;
+    const positive = counts.peace + counts.enlightened + counts.insight;
+    return {
+      storyId,
+      title: getStoryTitle(storyId),
+      total,
+      positive,
+      rate: total > 0 ? Math.round((positive / total) * 100) : 0
+    };
+  }).filter(s => s.total >= 1)
+    .sort((a, b) => b.positive - a.positive)
+    .slice(0, 10);
+
+  if (storyScores.length === 0) {
+    document.getElementById('story-feedback-empty').classList.add('show');
+    return;
+  } else {
+    document.getElementById('story-feedback-empty').classList.remove('show');
+  }
+
+  const ctx = document.getElementById('story-feedback-chart');
+  if (charts.storyFeedback) charts.storyFeedback.destroy();
+
+  charts.storyFeedback = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: storyScores.map(s => s.title),
+      datasets: [
+        {
+          label: '平靜',
+          data: storyScores.map(s => storyFeedbackMap[s.storyId].peace || 0),
+          backgroundColor: 'rgba(42, 107, 94, 0.8)',
+          borderRadius: 2
+        },
+        {
+          label: '開示',
+          data: storyScores.map(s => storyFeedbackMap[s.storyId].enlightened || 0),
+          backgroundColor: 'rgba(212, 165, 116, 0.8)',
+          borderRadius: 2
+        },
+        {
+          label: '體悟',
+          data: storyScores.map(s => storyFeedbackMap[s.storyId].insight || 0),
+          backgroundColor: 'rgba(192, 214, 223, 0.8)',
+          borderRadius: 2
+        },
+        {
+          label: '思考中',
+          data: storyScores.map(s => storyFeedbackMap[s.storyId].thinking || 0),
+          backgroundColor: 'rgba(122, 139, 154, 0.5)',
+          borderRadius: 2
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: brandColors.moonlight,
+            font: { family: "'Noto Sans TC', sans-serif" }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: brandColors.muted },
+          grid: { color: 'rgba(122, 139, 154, 0.1)' }
+        },
+        y: {
+          stacked: true,
+          ticks: { color: brandColors.moonlight },
+          grid: { display: false }
+        }
+      }
+    }
+  });
 }
 
 /**

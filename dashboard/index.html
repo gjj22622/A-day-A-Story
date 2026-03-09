@@ -50,6 +50,18 @@
         <div class="stat-value" id="today-views">-</div>
         <div class="stat-unit">次</div>
       </div>
+
+      <div class="stat-card">
+        <div class="stat-label">今日心情回饋</div>
+        <div class="stat-value" id="today-feedback">-</div>
+        <div class="stat-unit">則</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">今日隨緣一則</div>
+        <div class="stat-value" id="today-random">-</div>
+        <div class="stat-unit">次</div>
+      </div>
     </section>
 
     <!-- 圖表區塊 -->
@@ -76,6 +88,21 @@
         <h2 class="chart-title">每日趨勢（過去 30 天）</h2>
         <canvas id="daily-trend-chart"></canvas>
         <div class="chart-empty-state" id="trend-empty">尚無數據</div>
+      </div>
+    </section>
+
+    <!-- 心情回饋分析區塊 -->
+    <section class="charts-section">
+      <div class="chart-container">
+        <h2 class="chart-title">閱讀後心情回饋</h2>
+        <canvas id="feedback-chart"></canvas>
+        <div class="chart-empty-state" id="feedback-empty">尚無數據</div>
+      </div>
+
+      <div class="chart-container">
+        <h2 class="chart-title">故事回饋效果排行</h2>
+        <canvas id="story-feedback-chart"></canvas>
+        <div class="chart-empty-state" id="story-feedback-empty">尚無數據</div>
       </div>
     </section>
 
