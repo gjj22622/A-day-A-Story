@@ -42,5 +42,16 @@
     "post_id": "985242784680024_122101413939173816",
     "error": null,
     "timestamp": "2026-03-10T10:19:22.978801+08:00"
+  },
+  {
+    "date": "2026-03-11",
+    "story_id": "BDH-012",
+    "story_title": "火上搧風的人",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "dry_run",
+    "post_id": null,
+    "error": null,
+    "timestamp": "2026-03-10T10:36:17.267277+08:00"
   }
 ]
