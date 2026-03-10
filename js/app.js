@@ -58,8 +58,9 @@ ${storyIndex}${exclude}
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 100,
-            responseMimeType: 'application/json'
+            maxOutputTokens: 256,
+            responseMimeType: 'application/json',
+            thinkingConfig: { thinkingBudget: 0 }
           }
         })
       }
