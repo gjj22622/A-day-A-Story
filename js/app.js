@@ -7,6 +7,85 @@ let typewriterInterval = null;
 let litCount = 0;
 let buildIdx = 0;
 let recentStoryIds = []; // 記錄最近看過的故事，避免短期重複
+let isSubmitting = false; // 防止重複提交
+
+// ===== AI MATCHING (Gemini) =====
+const GEMINI_CONFIG = {
+  apiKey: 'AIzaSyCLKK-WQrhv5kszd4nurmngEcGkxg-sOxA',
+  model: 'gemini-2.5-flash',
+  timeout: 8000
+};
+let storyIndex = null;
+
+function buildStoryIndex() {
+  return stories.map(s =>
+    `${s.id}|${s.title}|${s.moral}|${s.keywords.join(',')}`
+  ).join('\n');
+}
+
+async function aiSeekStory(userInput) {
+  if (!storyIndex) storyIndex = buildStoryIndex();
+
+  const exclude = recentStoryIds.length > 0
+    ? `\n排除最近看過：${recentStoryIds.join(', ')}` : '';
+
+  const prompt = `你是「一念清涼」AI推薦引擎。從百喻經98則寓言中，根據使用者心情選出最適合的故事。
+
+選擇原則：
+1. 故事寓意要能回應使用者的處境或情緒
+2. 優先選情境相關的，其次選情緒共鳴的
+3. 三則推薦要有差異性，不要都選同類型的故事
+${selectedTags.size > 0 ? '\n使用者選的情緒標籤：' + Array.from(selectedTags).join(', ') : ''}
+故事清單（ID|標題|寓意|關鍵字）：
+${storyIndex}${exclude}
+
+使用者的心情：「${userInput}」
+
+選出最適合的3則，僅回覆JSON：{"picks":["BDH-xxx","BDH-xxx","BDH-xxx"]}`;
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), GEMINI_CONFIG.timeout);
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.model}:generateContent?key=${GEMINI_CONFIG.apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 100,
+            responseMimeType: 'application/json'
+          }
+        })
+      }
+    );
+
+    clearTimeout(tid);
+    if (!res.ok) throw new Error(`API ${res.status}`);
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Empty response');
+
+    const picks = JSON.parse(text).picks || [];
+    const candidates = picks.map(id => stories.find(s => s.id === id)).filter(Boolean);
+    if (candidates.length === 0) throw new Error('No valid picks');
+
+    const chosen = candidates[0];
+    recentStoryIds.push(chosen.id);
+    if (recentStoryIds.length > 20) recentStoryIds.shift();
+
+    console.log(`🤖 AI picked: ${chosen.title} (${chosen.id}) from [${picks.join(', ')}]`);
+    return chosen;
+  } catch (err) {
+    clearTimeout(tid);
+    throw err;
+  }
+}
 
 // ===== LOAD DATA ON STARTUP =====
 // Supports both HTTP server (fetch) and local file:// (XMLHttpRequest fallback)
@@ -138,90 +217,107 @@ function updateSeekBtn() {
   }
 }
 
-// ===== MOOD SUBMISSION =====
-function submitMood() {
+// ===== KEYWORD PARSING (for fallback) =====
+function parseInputKeywords(input) {
+  for (const [keyword, tags] of Object.entries(keywordMap)) {
+    if (input.includes(keyword)) {
+      tags.forEach(t => selectedTags.add(t));
+    }
+  }
+  stories.forEach(s => {
+    s._inputScore = 0;
+    s.keywords.forEach(kw => {
+      if (input.includes(kw)) {
+        s._inputScore += 1.5;
+      }
+    });
+  });
+}
+
+// ===== MOOD SUBMISSION (AI-enhanced) =====
+async function submitMood() {
   const input = document.getElementById('moodInput').value.trim();
   if (!input && selectedTags.size === 0) return;
+  if (isSubmitting) return;
+  isSubmitting = true;
 
-  // Parse input into tags using keyword map
+  // Show transition immediately
+  showTransition(false);
+  const startTime = Date.now();
+
+  let matchMethod = 'keyword';
+
   if (input) {
-    for (const [keyword, tags] of Object.entries(keywordMap)) {
-      if (input.includes(keyword)) {
-        tags.forEach(t => selectedTags.add(t));
-      }
+    try {
+      currentStory = await aiSeekStory(input);
+      matchMethod = 'ai';
+    } catch (err) {
+      console.warn('🤖 AI matching failed, using keyword fallback:', err.message);
+      parseInputKeywords(input);
+      seekStory(input);
     }
+  } else {
+    // Tags only — keyword matching is fine
+    seekStory(input);
+  }
 
-    // Also score stories based on direct keyword match
-    stories.forEach(s => {
-      s._inputScore = 0;
-      s.keywords.forEach(kw => {
-        if (input.includes(kw)) {
-          s._inputScore += 1.5; // 降低權重，避免單一故事因 keyword 獨佔常見詞而壟斷
-        }
-      });
+  // Track
+  if (window.Analytics && input) {
+    Analytics.track('mood_text_input', {
+      text: input,
+      matchedStoryId: currentStory ? currentStory.id : '-',
+      matchedStoryTitle: currentStory ? currentStory.title : '-',
+      matchMethod: matchMethod
     });
   }
 
-  seekStory(input);
+  // Ensure minimum transition time (2.8s)
+  const elapsed = Date.now() - startTime;
+  const wait = Math.max(0, 2800 - elapsed);
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+
+  if (currentStory) {
+    renderStory(currentStory);
+    showScreen('story-screen');
+  }
+
+  isSubmitting = false;
 }
 
 
-// ===== MATCHING ALGORITHM =====
+// ===== MATCHING ALGORITHM (keyword fallback) =====
 function seekStory(userInput) {
   if (selectedTags.size === 0 && !document.getElementById('moodInput').value.trim()) {
     return;
   }
 
-  // Score each story
   const scored = stories.map(story => {
     let score = story._inputScore || 0;
-
-    // Combine all tags from the new JSON structure
     const allTags = [
       ...(story.tags.emotions || []),
       ...(story.tags.contexts || []),
       ...(story.tags.themes || [])
     ];
-
-    // Add score for matching selected tags
     selectedTags.forEach(tag => {
-      if (allTags.includes(tag)) {
-        score += 2;
-      }
+      if (allTags.includes(tag)) score += 2;
     });
-
-    // Add slight randomness to avoid always same result
     score += Math.random() * 0.5;
-
     return { story, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
   currentStory = scored[0].story;
-
-  // Clean up
   stories.forEach(s => delete s._inputScore);
-
-  // Track text input WITH matched story (after matching)
-  if (window.Analytics && userInput) {
-    Analytics.track('mood_text_input', {
-      text: userInput,
-      matchedStoryId: currentStory.id,
-      matchedStoryTitle: currentStory.title
-    });
-  }
-
-  // Show transition
-  showTransition();
 }
 
 // ===== TRANSITION SCREEN =====
-function showTransition() {
+function showTransition(autoRender = true) {
   const phrases = [
     "正在千年智慧中<br>為你尋找一念清涼…",
     "翻開兩千年前的經卷<br>尋找屬於你的那一頁…",
     "在古老的寓言裡<br>有一則故事正等著你…",
-    "讓時光倒流一千五百年<br>那裡有人也曾和你一樣…"
+    "讓時光倒流一千五百年<br>那裡有人也曾和你一樣…",
+    "AI 正在細讀千年經卷<br>為你的心事尋找解方…"
   ];
 
   const phrase = phrases[Math.floor(Math.random() * phrases.length)];
@@ -229,10 +325,12 @@ function showTransition() {
 
   showScreen('transition-screen');
 
-  setTimeout(() => {
-    renderStory(currentStory);
-    showScreen('story-screen');
-  }, 2800);
+  if (autoRender) {
+    setTimeout(() => {
+      renderStory(currentStory);
+      showScreen('story-screen');
+    }, 2800);
+  }
 }
 
 // ===== SCREEN NAVIGATION =====
@@ -756,6 +854,7 @@ function shareStory() {
 // ===== PUBLIC API FOR HTML =====
 window.submitMood = submitMood;
 window.seekStory = seekStory;
+window.parseInputKeywords = parseInputKeywords;
 window.goToMood = goToMood;
 window.qaChoose = qaChoose;
 window.qaAdvance = qaAdvance;
