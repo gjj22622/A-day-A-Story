@@ -79,41 +79,36 @@ const Social = (() => {
   };
 
   /**
-   * LINE 分享 — 根據裝置自動選擇最佳方式
-   * 手機：優先用 line:// URI scheme 直接呼叫 LINE app
-   * 桌機：用 LINE 官方分享頁 https://line.me/R/share
+   * LINE 分享 — 統一用 line:// URI scheme 直接呼叫 LINE app
+   * 手機/桌機都優先嘗試開啟 LINE app，未安裝則複製文案提示手動貼
+   *
+   * ⚠️ 踩坑紀錄：
+   * - 舊版用 social-plugins.line.me → 需要瀏覽器登入 LINE，已淘汰
+   * - 改用 line.me/R/share → 會導到 LINE 官網首頁，無法分享
+   * - 正確做法：line://msg/text/ 直接呼叫 app（手機桌機都適用）
+   *
    * @param {Object} story - 故事物件
    */
   const shareToLine = (story) => {
     const url = getShareUrl(story);
     const text = generateShareText(story);
     const shareMessage = text + '\n\n' + url;
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      // 手機：用 line:// 直接開啟 LINE app
-      // 若未安裝 LINE，800ms 後降級到官方分享頁
-      const lineAppUrl = `line://msg/text/${encodeURIComponent(shareMessage)}`;
-      const webFallback = `https://line.me/R/share?text=${encodeURIComponent(shareMessage)}`;
+    // 統一用 line:// URI scheme 直接呼叫 LINE app
+    const lineAppUrl = `line://msg/text/${encodeURIComponent(shareMessage)}`;
 
-      const start = Date.now();
-      window.location.href = lineAppUrl;
+    const start = Date.now();
+    window.location.href = lineAppUrl;
 
-      // 若 app 有開啟，頁面會離開；若沒反應（未安裝），降級到網頁版
-      setTimeout(() => {
-        if (Date.now() - start < 1500) {
-          window.open(webFallback, '_blank');
-        }
-      }, 800);
-    } else {
-      // 桌機：開啟 LINE 官方分享頁（不需登入即可分享到手機 LINE）
-      const lineShareUrl = `https://line.me/R/share?text=${encodeURIComponent(shareMessage)}`;
-      window.open(
-        lineShareUrl,
-        'line-share',
-        'width=626,height=436,resizable=yes,toolbar=no,location=no'
-      );
-    }
+    // 若 LINE app 有開啟，頁面會跳轉；若未安裝（1 秒後仍在原頁面），降級到複製文案
+    setTimeout(() => {
+      if (Date.now() - start < 1500) {
+        // LINE 未安裝 — 複製文案並提示
+        copyToClipboard(story).then(() => {
+          showCopyNotification('LINE 未偵測到，文案已複製！請開啟 LINE 手動貼上');
+        });
+      }
+    }, 1000);
 
     trackShareEvent('line', story.id);
   };
