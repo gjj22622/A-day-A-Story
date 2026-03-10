@@ -79,36 +79,42 @@ const Social = (() => {
   };
 
   /**
-   * LINE 分享 — 統一用 line:// URI scheme 直接呼叫 LINE app
-   * 手機/桌機都優先嘗試開啟 LINE app，未安裝則複製文案提示手動貼
+   * LINE 分享 — 使用 LINE 官方 Social Plugin URL
    *
-   * ⚠️ 踩坑紀錄：
-   * - 舊版用 social-plugins.line.me → 需要瀏覽器登入 LINE，已淘汰
-   * - 改用 line.me/R/share → 會導到 LINE 官網首頁，無法分享
-   * - 正確做法：line://msg/text/ 直接呼叫 app（手機桌機都適用）
+   * ⚠️ 踩坑紀錄（三次教訓）：
+   * ❌ 第1次：social-plugins.line.me 舊版 JS SDK → 需瀏覽器登入 LINE，體驗差
+   * ❌ 第2次：line.me/R/share?text= → 桌機不支援，導到 LINE 官網首頁
+   * ❌ 第3次：line://msg/text/ → LINE 官方已標記 deprecated，有安全風險
+   * ✅ 正確做法：
+   *   - 手機：https://line.me/R/share?text= （官方 URL scheme，iOS/Android 會開啟 LINE app）
+   *   - 桌機：https://social-plugins.line.me/lineit/share?url=&text= （官方 Social Plugin，全平台）
+   *
+   * 參考文件：
+   *   - https://developers.line.biz/en/docs/messaging-api/using-line-url-scheme/
+   *   - https://developers.line.biz/en/docs/line-social-plugins/install-guide/using-line-share-buttons/
    *
    * @param {Object} story - 故事物件
    */
   const shareToLine = (story) => {
     const url = getShareUrl(story);
     const text = generateShareText(story);
-    const shareMessage = text + '\n\n' + url;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 統一用 line:// URI scheme 直接呼叫 LINE app
-    const lineAppUrl = `line://msg/text/${encodeURIComponent(shareMessage)}`;
-
-    const start = Date.now();
-    window.location.href = lineAppUrl;
-
-    // 若 LINE app 有開啟，頁面會跳轉；若未安裝（1 秒後仍在原頁面），降級到複製文案
-    setTimeout(() => {
-      if (Date.now() - start < 1500) {
-        // LINE 未安裝 — 複製文案並提示
-        copyToClipboard(story).then(() => {
-          showCopyNotification('LINE 未偵測到，文案已複製！請開啟 LINE 手動貼上');
-        });
-      }
-    }, 1000);
+    if (isMobile) {
+      // 手機：用官方 URL scheme，LINE app 會自動接管
+      // 未安裝 LINE 的使用者會被導引到下載頁
+      const shareText = text + '\n\n' + url;
+      const lineShareUrl = `https://line.me/R/share?text=${encodeURIComponent(shareText)}`;
+      window.open(lineShareUrl, '_blank');
+    } else {
+      // 桌機：用 LINE Social Plugin 官方分享頁（全平台支援，無需安裝 LINE）
+      const linePluginUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+      window.open(
+        linePluginUrl,
+        'line-share',
+        'width=626,height=436,resizable=yes,toolbar=no,location=no'
+      );
+    }
 
     trackShareEvent('line', story.id);
   };
