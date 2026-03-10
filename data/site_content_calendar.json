@@ -1,0 +1,152 @@
+{
+  "series": "一念清涼網站相關貼文",
+  "description": "每週2-4篇，晚上22:00發佈。三大子類：功能教學、Dashboard洞察、改版通知",
+  "schedule_time": "22:00 台灣時間 (UTC 14:00)",
+  "categories": {
+    "feature_tutorial": "功能教學：逐一拆解網站各功能",
+    "dashboard_insight": "數據洞察：從匿名行為數據產出貼文",
+    "release_note": "改版通知：重大改版整理通知"
+  },
+  "posts": [
+    {
+      "date": "2026-03-12",
+      "post_id": "SITE-002",
+      "category": "feature_tutorial",
+      "title": "心情輸入匹配功能",
+      "description": "輸入你的心情，AI 幫你找到共鳴的千年故事"
+    },
+    {
+      "date": "2026-03-14",
+      "post_id": "SITE-003",
+      "category": "feature_tutorial",
+      "title": "隨緣一則功能",
+      "description": "不知道要看什麼？讓緣分替你選一則"
+    },
+    {
+      "date": "2026-03-16",
+      "post_id": "SITE-004",
+      "category": "feature_tutorial",
+      "title": "5種故事呈現風格",
+      "description": "同一個故事，五種不同的閱讀體驗"
+    },
+    {
+      "date": "2026-03-18",
+      "post_id": "SITE-005",
+      "category": "feature_tutorial",
+      "title": "打字機效果故事",
+      "description": "逐字浮現的故事，像有人在你耳邊慢慢說"
+    },
+    {
+      "date": "2026-03-19",
+      "post_id": "SITE-006",
+      "category": "dashboard_insight",
+      "title": "上週大家最常輸入的心情",
+      "description": "從匿名數據看：原來大家都在煩這件事"
+    },
+    {
+      "date": "2026-03-21",
+      "post_id": "SITE-007",
+      "category": "feature_tutorial",
+      "title": "點亮故事（lines 風格）",
+      "description": "暗色文字，一行一行點亮，像在黑暗中找到光"
+    },
+    {
+      "date": "2026-03-23",
+      "post_id": "SITE-008",
+      "category": "feature_tutorial",
+      "title": "互動問答故事（qa 風格）",
+      "description": "故事裡有選擇題，你的答案決定你看到什麼"
+    },
+    {
+      "date": "2026-03-25",
+      "post_id": "SITE-009",
+      "category": "feature_tutorial",
+      "title": "社群分享功能",
+      "description": "看到觸動你的故事？一鍵分享給朋友"
+    },
+    {
+      "date": "2026-03-26",
+      "post_id": "SITE-010",
+      "category": "dashboard_insight",
+      "title": "被推薦最多次的故事 TOP 5",
+      "description": "這5則故事，最多人的心情跟它共鳴"
+    },
+    {
+      "date": "2026-03-28",
+      "post_id": "SITE-011",
+      "category": "feature_tutorial",
+      "title": "閱讀後心情回饋",
+      "description": "讀完故事的你，是平靜、頓悟、還是仍在思考？"
+    },
+    {
+      "date": "2026-03-30",
+      "post_id": "SITE-012",
+      "category": "feature_tutorial",
+      "title": "蓋樓故事（build 風格）",
+      "description": "一層一層往上蓋，像在建造你自己的智慧塔"
+    },
+    {
+      "date": "2026-04-01",
+      "post_id": "SITE-013",
+      "category": "dashboard_insight",
+      "title": "讀完故事後大家最常的反應",
+      "description": "4種回饋中，哪種最多人選？答案出乎意料"
+    },
+    {
+      "date": "2026-04-03",
+      "post_id": "SITE-014",
+      "category": "dashboard_insight",
+      "title": "最冷門 vs 最熱門的故事",
+      "description": "有些故事默默等著，等對的人來讀它"
+    },
+    {
+      "date": "2026-04-05",
+      "post_id": "SITE-015",
+      "category": "feature_tutorial",
+      "title": "水墨風故事（ink 風格）",
+      "description": "文字隨滾動漸現，像水墨在宣紙上暈開"
+    },
+    {
+      "date": "2026-04-08",
+      "post_id": "SITE-016",
+      "category": "dashboard_insight",
+      "title": "什麼時段最多人來找一念清涼",
+      "description": "深夜還是午後？數據告訴你"
+    },
+    {
+      "date": "2026-04-10",
+      "post_id": "SITE-017",
+      "category": "dashboard_insight",
+      "title": "本月心情關鍵字雲",
+      "description": "把大家輸入的心情匿名整理，畫成一朵雲"
+    },
+    {
+      "date": "2026-04-13",
+      "post_id": "SITE-018",
+      "category": "feature_tutorial",
+      "title": "手機版完美體驗",
+      "description": "一念清涼就是為手機設計的，隨時隨地一念清涼"
+    },
+    {
+      "date": "2026-04-15",
+      "post_id": "SITE-019",
+      "category": "dashboard_insight",
+      "title": "用戶最愛的故事主題 TOP 3",
+      "description": "放下、轉念、自我覺察——你是哪一種？"
+    },
+    {
+      "date": "2026-04-18",
+      "post_id": "SITE-020",
+      "category": "feature_tutorial",
+      "title": "文言文原典對照",
+      "description": "每則故事都附上百喻經原文，古今對照更有味道"
+    },
+    {
+      "date": "2026-04-21",
+      "post_id": "SITE-021",
+      "category": "dashboard_insight",
+      "title": "隨緣一則 vs 心情匹配",
+      "description": "兩種找故事的方式，哪種更多人用？"
+    }
+  ]
+}
