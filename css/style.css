@@ -7,7 +7,9 @@
   --lotus-gold: #D4A574;
   --jade: #2A6B5E;
   --cloud: #F5F0EB;
-  --muted: #7A8B9A;
+  --muted: #94A7B5;          /* 提亮：原 #7A8B9A → 對比度從 3.5:1 提升至 5.2:1 */
+  --muted-dim: #7A8B9A;      /* 保留原色用於純裝飾性元素 */
+  --jade-text: #3E9B89;      /* jade 文字用：對比度 5.18:1（原 #2A6B5E 僅 2.79:1） */
   --serif: 'Noto Serif TC', serif;
   --sans: 'Noto Sans TC', sans-serif;
 }
@@ -74,9 +76,9 @@ a { color: inherit; text-decoration: none; }
 }
 .brand-sub {
   font-family: var(--serif);
-  font-size: clamp(1rem, 3vw, 1.3rem);
+  font-size: clamp(1.05rem, 3vw, 1.3rem);
   color: var(--moonlight);
-  opacity: 0.7;
+  opacity: 0.85;
   margin-bottom: 3rem;
   line-height: 1.8;
 }
@@ -111,12 +113,12 @@ a { color: inherit; text-decoration: none; }
   gap: 0.5rem;
   margin-top: 1rem;
   padding: 0.5rem 1.2rem;
-  border: 1px solid rgba(192, 214, 223, 0.2);
+  border: 1px solid rgba(192, 214, 223, 0.25);
   border-radius: 2rem;
   color: var(--moonlight);
   font-family: var(--sans);
-  font-size: 0.85rem;
-  opacity: 0.5;
+  font-size: 0.9rem;
+  opacity: 0.7;
   transition: all 0.4s ease;
   text-decoration: none;
 }
@@ -145,8 +147,8 @@ a { color: inherit; text-decoration: none; }
 }
 .mood-header p {
   color: var(--moonlight);
-  opacity: 0.6;
-  font-size: 0.95rem;
+  opacity: 0.8;
+  font-size: 1rem;
 }
 .mood-input-area {
   width: 100%;
@@ -169,7 +171,7 @@ a { color: inherit; text-decoration: none; }
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
-.mood-input::placeholder { color: var(--muted); }
+.mood-input::placeholder { color: var(--muted-dim); }
 .mood-input:focus {
   border-color: var(--lotus-gold);
   box-shadow: 0 0 20px rgba(212,165,116,0.1);
@@ -191,7 +193,7 @@ a { color: inherit; text-decoration: none; }
 .divider-text {
   text-align: center;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   margin-bottom: 1.5rem;
   position: relative;
 }
@@ -210,10 +212,10 @@ a { color: inherit; text-decoration: none; }
 }
 .tag-section-title {
   font-family: var(--serif);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--lotus-gold);
   margin-bottom: 0.8rem;
-  opacity: 0.8;
+  opacity: 0.95;
 }
 .tag-cloud {
   display: flex;
@@ -222,11 +224,11 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
 }
 .mood-tag {
-  padding: 0.5rem 1.1rem;
-  border: 1px solid rgba(192,214,223,0.2);
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(192,214,223,0.25);
   border-radius: 20px;
-  font-size: 0.9rem;
-  color: var(--moonlight);
+  font-size: 0.95rem;
+  color: var(--cloud);
   cursor: pointer;
   transition: all 0.3s ease;
   background: transparent;
@@ -310,9 +312,9 @@ a { color: inherit; text-decoration: none; }
 .random-hint {
   text-align: center;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   margin-top: 0.6rem;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 /* ===== SCREEN 3: TRANSITION ===== */
@@ -383,13 +385,13 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.5rem;
 }
 .style-ink .story-source {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 3rem;
 }
 .style-ink .story-paragraph {
   font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   line-height: 2.2;
   color: var(--cloud);
   margin-bottom: 1.5rem;
@@ -416,7 +418,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.5rem;
 }
 .style-qa .story-source {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 2rem;
 }
@@ -428,7 +430,7 @@ a { color: inherit; text-decoration: none; }
 .style-qa .qa-step.active { display: block; animation: fadeInUp 0.6s ease; }
 .style-qa .qa-narrative {
   font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   line-height: 2.2;
   color: var(--cloud);
   margin-bottom: 2rem;
@@ -449,12 +451,12 @@ a { color: inherit; text-decoration: none; }
 }
 .style-qa .qa-choice {
   padding: 1rem 1.5rem;
-  border: 1px solid rgba(192,214,223,0.2);
+  border: 1px solid rgba(192,214,223,0.25);
   border-radius: 10px;
-  color: var(--moonlight);
+  color: var(--cloud);
   cursor: pointer;
   font-family: var(--sans);
-  font-size: 1rem;
+  font-size: 1.05rem;
   transition: all 0.3s;
   background: transparent;
   text-align: left;
@@ -492,13 +494,13 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.5rem;
 }
 .style-typewriter .story-source {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 3rem;
 }
 .style-typewriter .typewriter-area {
   font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   line-height: 2.4;
   color: var(--cloud);
   min-height: 200px;
@@ -546,7 +548,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.5rem;
 }
 .style-lines .story-source {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 2rem;
 }
@@ -564,7 +566,7 @@ a { color: inherit; text-decoration: none; }
   line-height: 2;
   color: var(--cloud);
   padding: 0.8rem 0;
-  opacity: 0.08;
+  opacity: 0.12;
   transition: opacity 0.8s ease, transform 0.6s ease;
   cursor: pointer;
   border-bottom: 1px solid rgba(192,214,223,0.05);
@@ -588,7 +590,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 0.5rem;
 }
 .style-build .story-source {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 2rem;
 }
@@ -690,10 +692,10 @@ a { color: inherit; text-decoration: none; }
 }
 .moral-elaboration {
   font-family: var(--serif);
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 2;
-  color: var(--moonlight);
-  opacity: 0.8;
+  color: var(--cloud);
+  opacity: 0.9;
   margin-bottom: 2rem;
 }
 .reflection-box {
@@ -704,8 +706,8 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 2rem;
 }
 .reflection-label {
-  font-size: 0.75rem;
-  color: var(--jade);
+  font-size: 0.8rem;
+  color: var(--jade-text);
   letter-spacing: 0.15em;
   margin-bottom: 0.6rem;
 }
@@ -734,10 +736,10 @@ a { color: inherit; text-decoration: none; }
   display: none;
   margin-top: 1rem;
   padding: 1.5rem;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
   border-radius: 8px;
   font-family: var(--serif);
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 2;
   color: var(--muted);
   font-style: italic;
@@ -785,6 +787,9 @@ a { color: inherit; text-decoration: none; }
 
 /* ===== RESPONSIVE — Mobile (≤600px) ===== */
 @media (max-width: 600px) {
+  /* 40-70歲手機用戶：基礎字級加大 */
+  html { font-size: 17px; }
+
   /* Screen & Layout */
   .story-container { padding: 1.5rem 1rem; }
   .mood-input-area { padding: 0 0.5rem; }
@@ -837,21 +842,21 @@ a { color: inherit; text-decoration: none; }
   .build-btn { font-size: 1rem; padding: 0.9rem 2rem; }
 
   /* Story styles — Typewriter */
-  .style-typewriter .typewriter-area { font-size: 1.05rem; line-height: 2.2; }
+  .style-typewriter .typewriter-area { font-size: 1.1rem; line-height: 2.2; }
 
   /* Story styles — Lines */
-  .style-lines .story-line { font-size: 1.05rem; line-height: 1.9; }
+  .style-lines .story-line { font-size: 1.1rem; line-height: 2; }
 
   /* Story styles — Ink */
-  .style-ink .story-paragraph { font-size: 1.05rem; line-height: 2; }
+  .style-ink .story-paragraph { font-size: 1.1rem; line-height: 2.1; }
 
   /* Moral & Reflection */
   .moral-section { padding: 1.5rem 1rem; margin-top: 2rem; }
-  .moral-text { font-size: 1.15rem; }
-  .moral-elaboration { font-size: 0.95rem; }
+  .moral-text { font-size: 1.2rem; }
+  .moral-elaboration { font-size: 1rem; }
   .reflection-box { padding: 1.2rem 1rem; }
-  .reflection-q { font-size: 1rem; }
-  .original-text { padding: 1rem; font-size: 0.9rem; }
+  .reflection-q { font-size: 1.05rem; }
+  .original-text { padding: 1rem; font-size: 0.95rem; }
 
   /* Action Row */
   .action-row { flex-direction: column; align-items: center; gap: 0.8rem; }
@@ -924,7 +929,7 @@ a { color: inherit; text-decoration: none; }
 }
 .share-section .share-label {
   font-family: var(--sans);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 0.8rem;
 }
@@ -981,12 +986,12 @@ a { color: inherit; text-decoration: none; }
 }
 .feedback-section .feedback-title {
   font-family: var(--serif);
-  font-size: 1rem;
-  color: var(--jade);
+  font-size: 1.05rem;
+  color: var(--jade-text);
   margin-bottom: 0.5rem;
 }
 .feedback-section .feedback-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--muted);
   margin-bottom: 1.2rem;
 }
@@ -1002,14 +1007,14 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 0.4rem;
   padding: 0.8rem 1.2rem;
-  border: 1px solid rgba(192,214,223,0.2);
+  border: 1px solid rgba(192,214,223,0.25);
   border-radius: 12px;
   background: transparent;
-  color: var(--moonlight);
+  color: var(--cloud);
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: var(--sans);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   min-width: 80px;
 }
 .feedback-btn .feedback-icon {
@@ -1031,9 +1036,9 @@ a { color: inherit; text-decoration: none; }
   display: none;
   padding: 1rem;
   text-align: center;
-  color: var(--jade);
+  color: var(--jade-text);
   font-family: var(--serif);
-  font-size: 0.95rem;
+  font-size: 1rem;
   animation: fadeInUp 0.5s ease;
 }
 .feedback-thanks.show {
