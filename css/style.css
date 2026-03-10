@@ -752,14 +752,141 @@ a { color: inherit; text-decoration: none; }
   background: rgba(212,165,116,0.12);
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE — Tablet (601~768px) ===== */
+@media (max-width: 768px) {
+  .story-container { max-width: 100%; padding: 2rem 1.2rem; }
+  .moral-section { padding: 2rem 1.5rem; }
+  .reflection-box { padding: 1.2rem 1.5rem; }
+  .mood-input-area { max-width: 100%; }
+  /* 社群分享按鈕在平板自動換行 */
+  .social-share-buttons { justify-content: center; }
+}
+
+/* ===== RESPONSIVE — Mobile (≤600px) ===== */
 @media (max-width: 600px) {
+  /* Screen & Layout */
   .story-container { padding: 1.5rem 1rem; }
   .mood-input-area { padding: 0 0.5rem; }
+
+  /* Landing */
+  .lotus-icon { font-size: 3rem; }
+  .enter-btn {
+    padding: 1rem 2.5rem;
+    font-size: 1rem;
+    width: 80%;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  /* Mood Input — 手機上輸入框與按鈕拆成兩行 */
+  .mood-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .mood-input {
+    padding: 1rem 1.2rem;
+    font-size: 1rem;
+  }
+  .mood-submit {
+    position: static;
+    transform: none;
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  .mood-submit:hover { transform: none; }
+
+  /* Tags */
+  .tag-cloud { gap: 0.4rem; }
+  .mood-tag { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+  .seek-btn { padding: 0.9rem 2rem; font-size: 1rem; width: 90%; }
+  .random-btn { padding: 0.9rem 2rem; font-size: 1rem; width: 90%; }
+
+  /* Story styles — QA */
   .qa-choices { max-width: 100% !important; }
+  .style-qa .qa-narrative { font-size: 1.05rem; line-height: 2; }
+  .style-qa .qa-question { font-size: 1.1rem; }
+
+  /* Story styles — Build */
   .building-floor::before { display: none; }
-  .building-visual { margin-left: 0; padding-left: 0; }
-  .action-row { flex-direction: column; align-items: center; }
+  .building-visual { margin-left: 0; padding-left: 0; max-width: 100%; }
+  .build-scene { min-height: 40vh; }
+  .build-btn { font-size: 1rem; padding: 0.9rem 2rem; }
+
+  /* Story styles — Typewriter */
+  .style-typewriter .typewriter-area { font-size: 1.05rem; line-height: 2.2; }
+
+  /* Story styles — Lines */
+  .style-lines .story-line { font-size: 1.05rem; line-height: 1.9; }
+
+  /* Story styles — Ink */
+  .style-ink .story-paragraph { font-size: 1.05rem; line-height: 2; }
+
+  /* Moral & Reflection */
+  .moral-section { padding: 1.5rem 1rem; margin-top: 2rem; }
+  .moral-text { font-size: 1.15rem; }
+  .moral-elaboration { font-size: 0.95rem; }
+  .reflection-box { padding: 1.2rem 1rem; }
+  .reflection-q { font-size: 1rem; }
+  .original-text { padding: 1rem; font-size: 0.9rem; }
+
+  /* Action Row */
+  .action-row { flex-direction: column; align-items: center; gap: 0.8rem; }
+  .action-btn { width: 80%; text-align: center; }
+
+  /* Feedback — 2x2 grid on mobile */
+  .feedback-section { padding: 1.5rem 1rem; }
+  .feedback-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  .feedback-btn {
+    min-width: unset;
+    padding: 0.7rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  .feedback-btn .feedback-icon { font-size: 1.3rem; }
+
+  /* Social Share Buttons — override inline styles */
+  .social-share-buttons {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+  .social-share-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    flex: 0 0 auto;
+  }
+
+  /* Back button */
+  .back-btn { top: 0.8rem; left: 0.8rem; padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+  /* 社群複製通知 */
+  #social-copy-notification {
+    left: 10% !important;
+    right: 10% !important;
+    transform: none !important;
+    text-align: center;
+  }
+}
+
+/* ===== RESPONSIVE — Small Mobile (≤375px) ===== */
+@media (max-width: 375px) {
+  .brand-title { letter-spacing: 0.08em; }
+  .mood-header h2 { font-size: 1.3rem; }
+  .mood-header p { font-size: 0.85rem; }
+  .tag-cloud { gap: 0.3rem; }
+  .mood-tag { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  .feedback-options { grid-template-columns: 1fr 1fr; max-width: 260px; }
 }
 
 /* ===== FADE TRANSITIONS ===== */
@@ -793,6 +920,33 @@ a { color: inherit; text-decoration: none; }
 .share-section button:hover {
   transform: translateY(-2px);
   opacity: 0.9;
+}
+/* Social Share Buttons (rendered by social.js) */
+.social-share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.social-share-btn {
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.social-share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* ===== MOOD FEEDBACK SECTION ===== */
