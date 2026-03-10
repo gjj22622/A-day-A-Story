@@ -209,10 +209,186 @@ function listenToEvents() {
     updateRecentInputsTable(textInputs);
     updateFeedbackChart(feedbackCounts);
     updateStoryFeedbackChart(storyFeedbackMap);
+
+    // 🔴 每日優化監控面板
+    updateOptimizeMetrics(events, textInputs, storyViews);
   });
 
-  // 監聽過去 30 天的日期統計
+  // 監聯過去 30 天的日期統計
   listenToDailyTrendChart();
+}
+
+/**
+ * 🔴 每日優化核心：計算並更新所有優化監控指標
+ */
+function updateOptimizeMetrics(events, textInputs, storyViews) {
+  // === 1. 匹配失敗率 ===
+  const totalInputs = textInputs.length;
+  const failedInputs = textInputs.filter(t => t.matchedStory === '-');
+  const failRate = totalInputs > 0 ? Math.round((failedInputs.length / totalInputs) * 100) : 0;
+
+  document.getElementById('match-fail-rate').textContent = totalInputs > 0 ? failRate + '%' : '-';
+  document.getElementById('match-fail-detail').textContent =
+    totalInputs > 0 ? `${failedInputs.length} / ${totalInputs} 次輸入未匹配` : '尚無數據';
+
+  const failCard = document.getElementById('match-fail-card');
+  if (failRate <= 10) {
+    failCard.classList.add('ok');
+    failCard.classList.remove('stat-card--alert');
+  } else {
+    failCard.classList.add('stat-card--alert');
+    failCard.classList.remove('ok');
+  }
+
+  // === 2. 推薦集中度（Top1 佔比） ===
+  const viewEntries = Object.entries(storyViews).sort((a, b) => b[1] - a[1]);
+  const totalViews = viewEntries.reduce((sum, [, c]) => sum + c, 0);
+  if (viewEntries.length > 0 && totalViews > 0) {
+    const top1Pct = Math.round((viewEntries[0][1] / totalViews) * 100);
+    const top1Name = getStoryTitle(viewEntries[0][0]);
+    document.getElementById('recommend-concentration').textContent = top1Pct + '%';
+    document.getElementById('recommend-concentration-detail').textContent =
+      `Top1: ${top1Name} (${viewEntries[0][1]}次)`;
+  }
+
+  // === 3.「再抽一則」使用率 ===
+  let tryAnotherCount = 0;
+  let storyViewCount = 0;
+  Object.values(events).forEach(dateEvents => {
+    if (!dateEvents || typeof dateEvents !== 'object') return;
+    Object.values(dateEvents).forEach(event => {
+      if (!event || !event.eventName) return;
+      if (event.eventName === 'try_another') tryAnotherCount++;
+      if (event.eventName === 'story_view') storyViewCount++;
+    });
+  });
+  const tryAnotherRate = storyViewCount > 0 ? Math.round((tryAnotherCount / storyViewCount) * 100) : 0;
+  document.getElementById('try-another-rate').textContent = storyViewCount > 0 ? tryAnotherRate + '%' : '-';
+  document.getElementById('try-another-detail').textContent =
+    storyViewCount > 0 ? `${tryAnotherCount} 次再抽 / ${storyViewCount} 次閱讀` : '尚無數據';
+
+  // === 4. 手機用戶佔比 ===
+  let mobileCount = 0;
+  let desktopCount = 0;
+  Object.values(events).forEach(dateEvents => {
+    if (!dateEvents || typeof dateEvents !== 'object') return;
+    Object.values(dateEvents).forEach(event => {
+      if (!event || event.eventName !== 'session_start') return;
+      const device = event.device || {};
+      const w = device.screenWidth || 0;
+      if (w > 0 && w <= 768) mobileCount++;
+      else if (w > 768) desktopCount++;
+    });
+  });
+  const totalDevices = mobileCount + desktopCount;
+  const mobilePct = totalDevices > 0 ? Math.round((mobileCount / totalDevices) * 100) : 0;
+  document.getElementById('mobile-pct').textContent = totalDevices > 0 ? mobilePct + '%' : '-';
+  document.getElementById('mobile-detail').textContent =
+    totalDevices > 0 ? `手機 ${mobileCount} / 桌機 ${desktopCount}` : '尚無數據';
+
+  // === 5. 轉換漏斗 ===
+  let sessionCount = 0;
+  let feedbackCount = 0;
+  let shareCount = 0;
+  Object.values(events).forEach(dateEvents => {
+    if (!dateEvents || typeof dateEvents !== 'object') return;
+    Object.values(dateEvents).forEach(event => {
+      if (!event || !event.eventName) return;
+      if (event.eventName === 'session_start') sessionCount++;
+      if (event.eventName === 'mood_feedback') feedbackCount++;
+      if (event.eventName === 'share_click') shareCount++;
+    });
+  });
+
+  document.getElementById('funnel-session').textContent = sessionCount;
+  document.getElementById('funnel-view').textContent = storyViewCount;
+  document.getElementById('funnel-feedback').textContent = feedbackCount;
+  document.getElementById('funnel-share').textContent = shareCount;
+
+  if (sessionCount > 0) {
+    const viewRate = Math.round((storyViewCount / sessionCount) * 100);
+    const fbRate = Math.round((feedbackCount / sessionCount) * 100);
+    const shareRate = Math.round((shareCount / sessionCount) * 100);
+
+    document.getElementById('funnel-view-rate').textContent = viewRate + '%';
+    document.getElementById('funnel-feedback-rate').textContent = fbRate + '%';
+    document.getElementById('funnel-share-rate').textContent = shareRate + '%';
+
+    document.getElementById('funnel-bar-view').style.width = Math.max(viewRate, 2) + '%';
+    document.getElementById('funnel-bar-feedback').style.width = Math.max(fbRate, 2) + '%';
+    document.getElementById('funnel-bar-share').style.width = Math.max(shareRate, 2) + '%';
+  }
+
+  // === 6. 未匹配關鍵字列表 ===
+  updateUnmatchedTable(failedInputs);
+
+  // === 7. 故事推薦分佈（壟斷監控） ===
+  updateRecommendDistTable(storyViews, totalViews);
+}
+
+/**
+ * 更新未匹配的用戶輸入表格
+ */
+function updateUnmatchedTable(failedInputs) {
+  const tbody = document.getElementById('unmatched-inputs-tbody');
+
+  if (failedInputs.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">✅ 所有輸入都有匹配，太棒了！</td></tr>';
+    return;
+  }
+
+  // 聚合相同的輸入
+  const counts = {};
+  failedInputs.forEach(input => {
+    const key = (input.text || '').trim().toLowerCase();
+    if (!key) return;
+    if (!counts[key]) counts[key] = { text: input.text, count: 0, lastTime: input.timestamp };
+    counts[key].count++;
+    if (input.timestamp > counts[key].lastTime) counts[key].lastTime = input.timestamp;
+  });
+
+  const sorted = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 30);
+
+  tbody.innerHTML = sorted.map(entry => {
+    const date = new Date(entry.lastTime);
+    const timeStr = date.toLocaleString('zh-Hant-TW', {
+      month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+    return `<tr>
+      <td><strong>${entry.count}</strong></td>
+      <td>${escapeHtml(entry.text)}</td>
+      <td>${timeStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+/**
+ * 更新故事推薦分佈表（壟斷監控）
+ */
+function updateRecommendDistTable(storyViews, totalViews) {
+  const tbody = document.getElementById('recommend-dist-tbody');
+  const entries = Object.entries(storyViews).sort((a, b) => b[1] - a[1]);
+
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">尚無數據</td></tr>';
+    return;
+  }
+
+  const avg = totalViews / Math.max(entries.length, 1);
+
+  tbody.innerHTML = entries.slice(0, 15).map(([storyId, count], i) => {
+    const pct = totalViews > 0 ? Math.round((count / totalViews) * 100) : 0;
+    const isMonopoly = count > avg * 3;
+    const status = isMonopoly ? '🔴 壟斷警告' : (count > avg * 2 ? '🟡 偏高' : '✅ 正常');
+    const cls = isMonopoly ? 'monopoly-warning' : '';
+    return `<tr class="${cls}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(getStoryTitle(storyId))} (${storyId})</td>
+      <td>${count}</td>
+      <td>${pct}%</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
 }
 
 /**
