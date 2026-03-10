@@ -39,6 +39,7 @@
   <header class="dashboard-header" style="display:none;" id="dashboardHeader">
     <div class="header-container">
       <h1 class="header-title">一念清涼 管理儀錶板</h1>
+      <a href="usage-monitor.html" class="header-link">API 成本監控</a>
       <a href="../index.html" class="header-link">← 返回主站</a>
     </div>
   </header>
@@ -82,6 +83,65 @@
         <div class="stat-label">今日隨緣一則</div>
         <div class="stat-value" id="today-random">-</div>
         <div class="stat-unit">次</div>
+      </div>
+    </section>
+
+    <!-- 🔴 優化監控 KPI 區塊（每日優化用） -->
+    <section class="stats-overview optimize-stats">
+      <div class="stat-card stat-card--alert" id="match-fail-card">
+        <div class="stat-label">匹配失敗率</div>
+        <div class="stat-value" id="match-fail-rate">-</div>
+        <div class="stat-unit" id="match-fail-detail">尚無數據</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">推薦集中度（Top1 佔比）</div>
+        <div class="stat-value" id="recommend-concentration">-</div>
+        <div class="stat-unit" id="recommend-concentration-detail">尚無數據</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">「再抽一則」使用率</div>
+        <div class="stat-value" id="try-another-rate">-</div>
+        <div class="stat-unit" id="try-another-detail">尚無數據</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">手機用戶佔比</div>
+        <div class="stat-value" id="mobile-pct">-</div>
+        <div class="stat-unit" id="mobile-detail">尚無數據</div>
+      </div>
+    </section>
+
+    <!-- 轉換漏斗 -->
+    <section class="charts-section">
+      <div class="chart-container chart-wide">
+        <h2 class="chart-title">📊 轉換漏斗（全時間）</h2>
+        <div class="funnel-container" id="funnel-container">
+          <div class="funnel-step">
+            <div class="funnel-bar" id="funnel-bar-session" style="width:100%"></div>
+            <div class="funnel-label">訪客 (session_start)</div>
+            <div class="funnel-value" id="funnel-session">-</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" id="funnel-bar-view"></div>
+            <div class="funnel-label">閱讀故事 (story_view)</div>
+            <div class="funnel-value" id="funnel-view">-</div>
+            <div class="funnel-rate" id="funnel-view-rate"></div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" id="funnel-bar-feedback"></div>
+            <div class="funnel-label">給回饋 (mood_feedback)</div>
+            <div class="funnel-value" id="funnel-feedback">-</div>
+            <div class="funnel-rate" id="funnel-feedback-rate"></div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" id="funnel-bar-share"></div>
+            <div class="funnel-label">分享 (share_click)</div>
+            <div class="funnel-value" id="funnel-share">-</div>
+            <div class="funnel-rate" id="funnel-share-rate"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -142,6 +202,56 @@
           <tbody id="recent-inputs-tbody">
             <tr class="empty-row">
               <td colspan="3">尚無數據</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 🔴 匹配失敗的關鍵字列表（每日優化核心） -->
+    <section class="recent-inputs-section">
+      <h2 class="section-title">🚨 未匹配的用戶輸入（需要優化）</h2>
+      <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        以下輸入未能匹配到任何故事（推薦故事為 "-"），需要在 keywords.json 或 stories.json 中補充映射。
+      </p>
+      <div class="table-wrapper">
+        <table class="inputs-table">
+          <thead>
+            <tr>
+              <th>出現次數</th>
+              <th>用戶輸入</th>
+              <th>最近時間</th>
+            </tr>
+          </thead>
+          <tbody id="unmatched-inputs-tbody">
+            <tr class="empty-row">
+              <td colspan="3">尚無數據（太棒了！所有輸入都有匹配）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 故事推薦分佈表（壟斷監控） -->
+    <section class="recent-inputs-section">
+      <h2 class="section-title">📈 故事推薦分佈（壟斷監控）</h2>
+      <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        監控每則故事被推薦的次數分佈。任何故事被推薦超過平均值 3 倍以上會標記為 🔴 壟斷警告。
+      </p>
+      <div class="table-wrapper">
+        <table class="inputs-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>故事</th>
+              <th>推薦次數</th>
+              <th>佔比</th>
+              <th>狀態</th>
+            </tr>
+          </thead>
+          <tbody id="recommend-dist-tbody">
+            <tr class="empty-row">
+              <td colspan="5">尚無數據</td>
             </tr>
           </tbody>
         </table>
