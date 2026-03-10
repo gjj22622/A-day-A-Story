@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一念清涼 AI API 成本監控</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="usage-monitor.css">
+</head>
+<body>
+  <!-- 登入遮罩 -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-icon">🤖</div>
+      <h2 class="login-title">AI API 成本監控</h2>
+      <p class="login-subtitle">請輸入管理者帳號密碼</p>
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <div class="login-field">
+          <label for="loginUser">帳號</label>
+          <input type="text" id="loginUser" placeholder="帳號" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label for="loginPass">密碼</label>
+          <input type="password" id="loginPass" placeholder="密碼" autocomplete="current-password" required>
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button type="submit" class="login-btn">登入</button>
+      </form>
+    </div>
+  </div>
+
+  <header class="topbar" style="display:none" id="topbar">
+    <div>
+      <h1>🤖 AI API 成本監控</h1>
+      <p id="updatedAt">等待資料...</p>
+    </div>
+    <div class="actions">
+      <a href="index.html">回儀表板</a>
+      <a href="../index.html">回主站</a>
+    </div>
+  </header>
+
+  <main class="container" style="display:none" id="mainContent">
+
+    <!-- 定價參考 -->
+    <section class="status-card pricing-ref">
+      <h2>💰 Gemini 2.5 Flash 定價</h2>
+      <div class="pricing-grid">
+        <div><strong>方案</strong></div><div><strong>Input / 1M</strong></div><div><strong>Output / 1M</strong></div>
+        <div>Free Tier</div><div>免費（RPM 限制）</div><div>免費（RPM 限制）</div>
+        <div>Paid Tier</div><div>$0.30</div><div>$2.50</div>
+      </div>
+      <p class="note">每次 AI 匹配：~5,700 input + ~42 output tokens ≈ Paid 費率 $0.0019/次</p>
+      <p class="note">目前使用 Google AI Studio Free Tier（每日約 1,500 RPD 限制）</p>
+    </section>
+
+    <!-- 今日統計 -->
+    <h2 class="section-heading">📊 今日統計</h2>
+    <section class="cards">
+      <article class="card"><h3>AI 呼叫次數</h3><p id="todayCalls">-</p></article>
+      <article class="card"><h3>成功率</h3><p id="todaySuccessRate">-</p><span class="sub" id="todaySuccessDetail"></span></article>
+      <article class="card"><h3>Input Tokens</h3><p id="todayInputTokens">-</p><span class="sub" id="todayInputCost"></span></article>
+      <article class="card"><h3>Output Tokens</h3><p id="todayOutputTokens">-</p><span class="sub" id="todayOutputCost"></span></article>
+      <article class="card highlight"><h3>今日預估費用</h3><p id="todayTotalCost">$0.00</p><span class="sub">Paid Tier 費率</span></article>
+    </section>
+
+    <!-- Free Tier 用量條 -->
+    <section class="status-card">
+      <h2>🔋 Free Tier 使用量（每日限額）</h2>
+      <div class="bar-label">
+        <span id="usagePct">0%</span>
+        <span id="usageDetail" class="note">0 / 1,500 RPD</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="usageBar" style="width:0%">0%</div>
+      </div>
+    </section>
+
+    <!-- 累計統計 -->
+    <h2 class="section-heading">📈 累計統計（上線以來）</h2>
+    <section class="cards">
+      <article class="card"><h3>累計呼叫</h3><p id="totalCalls">-</p></article>
+      <article class="card"><h3>累計 Input Tokens</h3><p id="totalInputTokens">-</p><span class="sub" id="totalInputCost"></span></article>
+      <article class="card"><h3>累計 Output Tokens</h3><p id="totalOutputTokens">-</p><span class="sub" id="totalOutputCost"></span></article>
+      <article class="card highlight"><h3>累計預估費用</h3><p id="totalCost">$0.00</p><span class="sub">若切換 Paid Tier</span></article>
+    </section>
+
+    <!-- 每日趨勢圖 -->
+    <section class="status-card">
+      <h2>📉 每日 AI 呼叫趨勢（過去 30 天）</h2>
+      <canvas id="dailyApiChart" height="200"></canvas>
+      <p class="empty-state" id="chartEmpty" style="display:none">尚無數據</p>
+    </section>
+
+    <!-- 每日明細 -->
+    <section class="status-card">
+      <h2>📋 每日 API 明細</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>呼叫</th>
+              <th>成功</th>
+              <th>失敗</th>
+              <th>Input Tokens</th>
+              <th>Output Tokens</th>
+              <th>費用 (USD)</th>
+            </tr>
+          </thead>
+          <tbody id="dailyLogBody">
+            <tr><td colspan="7">尚無資料</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script src="usage-monitor.js"></script>
+</body>
+</html>
