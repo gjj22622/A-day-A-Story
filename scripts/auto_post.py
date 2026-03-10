@@ -323,20 +323,50 @@ def main():
         print("✅ 今天已經發過文了，跳過（冪等保護）")
         sys.exit(0)
 
-    # ─── 取得文案 ───
-    content = get_story_content(stories, entry['story_id'], entry['platform'])
+    # ─── 取得文案（動態生成優先） ───
+    gemini_key = os.environ.get('GEMINI_API_KEY', '')
+
+    # 動態匯入 generate_post 模組
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+    # 找到完整故事資料
+    story_obj = next((s for s in stories if s['id'] == entry['story_id']), None)
+
+    content = None
+    is_dynamic = False
+
+    if story_obj:
+        try:
+            from generate_post import get_post_content
+            post_result = get_post_content(story_obj, api_key=gemini_key)
+            if post_result:
+                content = {
+                    'message': post_result['message'],
+                    'title': story_obj['title'],
+                    'icon': story_obj['icon'],
+                    'link': f"https://gjj22622.github.io/A-day-A-Story/?story={entry['story_id']}"
+                }
+                is_dynamic = post_result['is_dynamic']
+        except Exception as e:
+            print(f"⚠️ 動態文案產生失敗，降級使用靜態文案：{e}")
+
+    # 降級：使用靜態文案
+    if not content or not content.get('message'):
+        content = get_story_content(stories, entry['story_id'], entry['platform'])
+
     if not content or not content['message']:
         print(f"❌ 找不到 {entry['story_id']} 的 {entry['platform']} 文案")
         sys.exit(1)
 
-    print(f"\n{'─'*50}")
+    mode_label = "🤖 動態生成" if is_dynamic else "📋 靜態文案"
+    print(f"\n{mode_label}")
+    print(f"{'─'*50}")
     print(f"【貼文預覽】")
-    print(content['message'][:300] + '...' if len(content['message']) > 300 else content['message'])
+    print(content['message'][:500] + '...' if len(content['message']) > 500 else content['message'])
     print(f"{'─'*50}")
 
     # ─── 準備圖片 ───
     image_path = None
-    gemini_key = os.environ.get('GEMINI_API_KEY', '')
 
     # 動態匯入 generate_image 模組
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -361,6 +391,7 @@ def main():
             "status": "dry_run",
             "post_id": None,
             "has_image": image_path is not None,
+            "is_dynamic_post": is_dynamic,
         }
         log_post(POST_LOG_PATH, entry, result)
         print("✅ 乾跑完成，已記錄到 post_log.json")
@@ -391,6 +422,7 @@ def main():
                 "status": "success",
                 "post_id": post_id,
                 "has_image": image_path is not None,
+                "is_dynamic_post": is_dynamic,
             }
             log_post(POST_LOG_PATH, entry, result)
 
