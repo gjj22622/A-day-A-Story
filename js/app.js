@@ -14,7 +14,7 @@ let isChatting = false; // 防止重複送出對話
 
 // ===== AI MATCHING (Gemini) =====
 const GEMINI_CONFIG = {
-  apiKey: 'AIzaSyCLKK-WQrhv5kszd4nurmngEcGkxg-sOxA',
+  apiKey: 'AIzaSyCe2r9cb5WhvxBKP4hNd3HwG1sp0K0Wilc',
   model: 'gemini-2.5-flash',
   timeout: 8000
 };
