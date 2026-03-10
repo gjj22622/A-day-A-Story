@@ -1,4 +1,4 @@
-/* 一念清涼 管理儀錶板 - JavaScript */
+/* 一念清涼 管理儀表板 - JavaScript */
 
 // Firebase 配置
 const firebaseConfig = {
@@ -52,10 +52,10 @@ const brandColors = {
 };
 
 /**
- * 初始化儀錶板
+ * 初始化儀表板
  */
 function initDashboard() {
-  console.log('初始化儀錶板...');
+  console.log('初始化儀表板...');
 
   // 先載入故事標題對照表，完成後再監聽事件
   loadStoryTitles().then(() => {
@@ -920,7 +920,7 @@ function escapeHtml(text) {
  */
 document.addEventListener('DOMContentLoaded', () => {
   initDashboard();
-  console.log('儀錶板已載入');
+  console.log('儀表板已載入');
 });
 
 /**

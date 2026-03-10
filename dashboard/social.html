@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一念清涼 社群發文追蹤</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --deep-indigo: #0D1B2A;
+      --lotus-gold: #D4A574;
+      --jade: #2A6B5E;
+      --moonlight: #C0D6DF;
+      --cloud: #F5F0EB;
+      --muted: #7A8B9A;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--deep-indigo);
+      color: var(--cloud);
+      min-height: 100vh;
+    }
+    header {
+      background: rgba(13, 27, 42, 0.95);
+      border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { color: var(--lotus-gold); font-size: 1.3rem; }
+    header a { color: var(--moonlight); text-decoration: none; font-size: 0.9rem; }
+    header a:hover { color: var(--lotus-gold); }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: rgba(42, 107, 94, 0.15);
+      border: 1px solid rgba(42, 107, 94, 0.3);
+      border-radius: 12px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-label { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .stat-value { color: var(--lotus-gold); font-size: 2rem; font-weight: 700; }
+    .stat-unit { color: var(--muted); font-size: 0.75rem; }
+
+    .section-title {
+      color: var(--lotus-gold);
+      font-size: 1.1rem;
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 2rem;
+    }
+    .cal-header {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+      padding: 0.3rem;
+    }
+    .cal-day {
+      background: rgba(255,255,255,0.03);
+      border-radius: 6px;
+      padding: 0.4rem;
+      min-height: 60px;
+      font-size: 0.7rem;
+      position: relative;
+    }
+    .cal-day .date { color: var(--muted); font-size: 0.65rem; }
+    .cal-day .icon { font-size: 1.2rem; display: block; text-align: center; margin: 0.2rem 0; }
+    .cal-day.posted { background: rgba(42, 107, 94, 0.25); border: 1px solid rgba(42, 107, 94, 0.4); }
+    .cal-day.scheduled { background: rgba(212, 165, 116, 0.1); border: 1px solid rgba(212, 165, 116, 0.2); }
+    .cal-day.failed { background: rgba(220, 53, 69, 0.2); border: 1px solid rgba(220, 53, 69, 0.4); }
+    .cal-day.today { box-shadow: 0 0 0 2px var(--lotus-gold); }
+    .cal-day.empty { background: transparent; }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .log-table th {
+      text-align: left;
+      color: var(--lotus-gold);
+      padding: 0.6rem;
+      border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+    }
+    .log-table td {
+      padding: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .status-success { background: rgba(42, 107, 94, 0.3); color: #5cb85c; }
+    .status-failed { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+    .status-scheduled { background: rgba(212, 165, 116, 0.2); color: var(--lotus-gold); }
+    .status-dry_run { background: rgba(192, 214, 223, 0.2); color: var(--moonlight); }
+
+    .theme-week-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .theme-tag {
+      background: rgba(212, 165, 116, 0.15);
+      border: 1px solid rgba(212, 165, 116, 0.3);
+      color: var(--lotus-gold);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: default;
+    }
+    .theme-tag.active { background: rgba(212, 165, 116, 0.4); }
+
+    .loading { text-align: center; color: var(--muted); padding: 2rem; }
+
+    @media (max-width: 768px) {
+      .calendar-grid { grid-template-columns: repeat(7, 1fr); gap: 2px; }
+      .cal-day { min-height: 45px; padding: 0.2rem; }
+      .cal-day .icon { font-size: 0.9rem; }
+      .container { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🪷 社群發文追蹤</h1>
+    <div>
+      <a href="index.html">← 主儀表板</a>
+      &nbsp;|&nbsp;
+      <a href="../index.html">← 返回主站</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- 統計概覽 -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">已發文</div>
+        <div class="stat-value" id="posted-count">-</div>
+        <div class="stat-unit">則</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">待發文</div>
+        <div class="stat-value" id="scheduled-count">-</div>
+        <div class="stat-unit">則</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">發文失敗</div>
+        <div class="stat-value" id="failed-count">-</div>
+        <div class="stat-unit">則</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">進度</div>
+        <div class="stat-value" id="progress-pct">-</div>
+        <div class="stat-unit">%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本週主題</div>
+        <div class="stat-value" id="current-theme" style="font-size:1rem;">-</div>
+        <div class="stat-unit">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- 主題週一覽 -->
+    <h2 class="section-title">📅 主題週一覽</h2>
+    <div class="theme-week-bar" id="theme-weeks"></div>
+
+    <!-- 發文日曆 -->
+    <h2 class="section-title">📆 發文日曆</h2>
+    <div class="calendar-grid" id="calendar-grid">
+      <div class="loading">載入中...</div>
+    </div>
+
+    <!-- 最近發文紀錄 -->
+    <h2 class="section-title">📝 發文紀錄（最新 20 筆）</h2>
+    <table class="log-table" id="log-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>故事</th>
+          <th>主題週</th>
+          <th>狀態</th>
+          <th>發文 ID</th>
+        </tr>
+      </thead>
+      <tbody id="log-body">
+        <tr><td colspan="5" class="loading">載入中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const DATA_BASE = '../data/';
+    const TODAY = new Date().toISOString().slice(0, 10);
+
+    async function loadData() {
+      try {
+        const [calRes, logRes] = await Promise.all([
+          fetch(DATA_BASE + 'content_calendar.json'),
+          fetch(DATA_BASE + 'post_log.json').catch(() => ({ ok: false }))
+        ]);
+
+        const calendar = calRes.ok ? await calRes.json() : null;
+        const postLog = logRes.ok ? await logRes.json() : [];
+
+        if (calendar) {
+          renderStats(calendar, postLog);
+          renderThemeWeeks(calendar);
+          renderCalendar(calendar, postLog);
+          renderLog(postLog);
+        }
+      } catch (err) {
+        console.error('載入失敗:', err);
+      }
+    }
+
+    function renderStats(calendar, postLog) {
+      const entries = calendar.calendar || [];
+      const successLogs = postLog.filter(l => l.status === 'success');
+      const failedLogs = postLog.filter(l => l.status === 'failed');
+      const posted = successLogs.length;
+      const failed = failedLogs.length;
+      const scheduled = entries.length - posted;
+
+      document.getElementById('posted-count').textContent = posted;
+      document.getElementById('scheduled-count').textContent = Math.max(0, scheduled);
+      document.getElementById('failed-count').textContent = failed;
+      document.getElementById('progress-pct').textContent =
+        entries.length > 0 ? Math.round(posted / entries.length * 100) : 0;
+
+      // 找出本週主題
+      const currentEntry = entries.find(e => e.date === TODAY);
+      if (currentEntry) {
+        document.getElementById('current-theme').textContent = currentEntry.theme || '-';
+      }
+    }
+
+    function renderThemeWeeks(calendar) {
+      const container = document.getElementById('theme-weeks');
+      const weeks = calendar.theme_weeks || [];
+      container.innerHTML = weeks.map(w => {
+        const isActive = calendar.calendar.some(e =>
+          e.week === w.week && e.date === TODAY
+        );
+        return `<span class="theme-tag ${isActive ? 'active' : ''}" title="${w.description}">
+          W${w.week} ${w.theme}（${w.dates}）
+        </span>`;
+      }).join('');
+    }
+
+    function renderCalendar(calendar, postLog) {
+      const grid = document.getElementById('calendar-grid');
+      const entries = calendar.calendar || [];
+      if (!entries.length) {
+        grid.innerHTML = '<div class="loading">尚無排程</div>';
+        return;
+      }
+
+      // 建立發文狀態 map
+      const statusMap = {};
+      postLog.forEach(l => {
+        if (l.status === 'success') statusMap[l.date] = 'posted';
+        else if (l.status === 'failed') statusMap[l.date] = 'failed';
+      });
+
+      // 找出日期範圍
+      const startDate = new Date(entries[0].date + 'T00:00:00');
+      const endDate = new Date(entries[entries.length - 1].date + 'T00:00:00');
+
+      // 從該月第一個週日開始
+      const calStart = new Date(startDate);
+      calStart.setDate(calStart.getDate() - calStart.getDay());
+
+      // 建立 entry map
+      const entryMap = {};
+      entries.forEach(e => { entryMap[e.date] = e; });
+
+      // 表頭
+      const headers = ['日', '一', '二', '三', '四', '五', '六'];
+      let html = headers.map(h => `<div class="cal-header">${h}</div>`).join('');
+
+      // 填充日曆格子
+      const current = new Date(calStart);
+      const endPad = new Date(endDate);
+      endPad.setDate(endPad.getDate() + (6 - endPad.getDay()));
+
+      while (current <= endPad) {
+        const dateStr = current.toISOString().slice(0, 10);
+        const entry = entryMap[dateStr];
+        const isToday = dateStr === TODAY;
+
+        if (entry) {
+          const status = statusMap[dateStr] || 'scheduled';
+          html += `<div class="cal-day ${status} ${isToday ? 'today' : ''}" title="${entry.story_title}（${entry.theme}）">
+            <span class="date">${current.getDate()}</span>
+            <span class="icon">${entry.story_icon}</span>
+          </div>`;
+        } else {
+          html += `<div class="cal-day empty ${isToday ? 'today' : ''}">
+            <span class="date" style="opacity:0.3">${current.getDate()}</span>
+          </div>`;
+        }
+
+        current.setDate(current.getDate() + 1);
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function renderLog(postLog) {
+      const tbody = document.getElementById('log-body');
+      if (!postLog.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">尚無發文紀錄</td></tr>';
+        return;
+      }
+
+      // 最新 20 筆
+      const recent = postLog.slice(-20).reverse();
+      tbody.innerHTML = recent.map(log => {
+        const statusClass = `status-${log.status}`;
+        const statusText = {
+          success: '✅ 成功',
+          failed: '❌ 失敗',
+          dry_run: '🧪 乾跑'
+        }[log.status] || log.status;
+
+        return `<tr>
+          <td>${log.date}</td>
+          <td>${log.story_title || log.story_id}</td>
+          <td>${log.theme_week || '-'}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td style="font-size:0.7rem;color:var(--muted)">${log.post_id || (log.error ? '⚠️ ' + log.error.slice(0, 50) : '-')}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // 啟動
+    loadData();
+  </script>
+</body>
+</html>
