@@ -1,0 +1,58 @@
+name: "🌐 一念清涼 Site Posts"
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '指定日期 (YYYY-MM-DD)'
+        required: false
+      dry_run:
+        description: '乾跑模式'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  site-post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Site Auto Post
+        env:
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS="$ARGS --date ${{ github.event.inputs.date }}"
+          fi
+          echo "參數: $ARGS"
+          python scripts/site_auto_post.py $ARGS
+
+      - name: Commit logs
+        run: |
+          git config user.name "一念清涼 Bot"
+          git config user.email "bot@yinian-qingliang.app"
+          git add data/post_log.json data/site_content_calendar.json images/custom/ || true
+          if git diff --cached --quiet; then
+            echo "沒有新紀錄"
+          else
+            DATE=$(date -u +%Y-%m-%d)
+            git commit -m "📝 site-post log: ${DATE}"
+            git push
+          fi
