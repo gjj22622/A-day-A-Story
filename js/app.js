@@ -41,7 +41,8 @@ ${storyIndex}${exclude}
 
 使用者的心情：「${userInput}」
 
-選出最適合的3則，僅回覆JSON：{"picks":["BDH-xxx","BDH-xxx","BDH-xxx"]}`;
+選出最適合的3則。
+回覆格式（僅回覆此JSON，不要加任何說明文字）：{"picks":["BDH-xxx","BDH-xxx","BDH-xxx"]}`;
 
   const controller = new AbortController();
   const tid = setTimeout(() => controller.abort(), GEMINI_CONFIG.timeout);
@@ -68,10 +69,13 @@ ${storyIndex}${exclude}
     if (!res.ok) throw new Error(`API ${res.status}`);
 
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Empty response');
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) throw new Error('Empty response');
 
-    const picks = JSON.parse(text).picks || [];
+    // Extract JSON even if Gemini adds text around it
+    const jsonMatch = rawText.match(/\{[\s\S]*"picks"[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in response: ' + rawText.substring(0, 80));
+    const picks = JSON.parse(jsonMatch[0]).picks || [];
     const candidates = picks.map(id => stories.find(s => s.id === id)).filter(Boolean);
     if (candidates.length === 0) throw new Error('No valid picks');
 
