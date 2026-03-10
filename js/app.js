@@ -8,6 +8,9 @@ let litCount = 0;
 let buildIdx = 0;
 let recentStoryIds = []; // 記錄最近看過的故事，避免短期重複
 let isSubmitting = false; // 防止重複提交
+let lastUserMoodInput = ''; // 保存使用者心情輸入，供 AI 對話使用
+let aiChatHistory = []; // AI 對話歷史
+let isChatting = false; // 防止重複送出對話
 
 // ===== AI MATCHING (Gemini) =====
 const GEMINI_CONFIG = {
@@ -73,6 +76,18 @@ ${storyIndex}${exclude}
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawText) throw new Error('Empty response');
 
+    // Track API usage for cost monitoring
+    const usage = data.usageMetadata;
+    if (usage && window.Analytics) {
+      Analytics.track('ai_api_call', {
+        model: GEMINI_CONFIG.model,
+        promptTokens: usage.promptTokenCount || 0,
+        outputTokens: usage.candidatesTokenCount || 0,
+        totalTokens: usage.totalTokenCount || 0,
+        success: true
+      });
+    }
+
     // Extract JSON even if Gemini adds text around it
     const jsonMatch = rawText.match(/\{[\s\S]*"picks"[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON in response: ' + rawText.substring(0, 80));
@@ -88,6 +103,14 @@ ${storyIndex}${exclude}
     return chosen;
   } catch (err) {
     clearTimeout(tid);
+    // Track failed API calls
+    if (window.Analytics) {
+      Analytics.track('ai_api_call', {
+        model: GEMINI_CONFIG.model,
+        success: false,
+        error: err.message?.substring(0, 100) || 'unknown'
+      });
+    }
     throw err;
   }
 }
@@ -210,6 +233,13 @@ function setupInputHandlers() {
   moodInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') submitMood();
   });
+
+  // Event delegation for AI chat input (dynamically created)
+  document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'aiChatInput') {
+      sendAiChat();
+    }
+  });
 }
 
 function updateSeekBtn() {
@@ -245,6 +275,10 @@ async function submitMood() {
   if (!input && selectedTags.size === 0) return;
   if (isSubmitting) return;
   isSubmitting = true;
+
+  // Save mood input for AI chat context
+  lastUserMoodInput = input;
+  aiChatHistory = []; // Reset chat history for new story
 
   // Show transition immediately
   showTransition(false);
@@ -802,6 +836,21 @@ function buildMoralHTML(story) {
         </div>
         <div class="feedback-thanks" id="feedbackThanks">感謝你的回饋 🙏 願你帶著這份清涼前行</div>
       </div>
+      <div class="ai-chat-section" id="aiChatSection">
+        <button class="ai-chat-trigger" id="aiChatTrigger" onclick="openAiChat()">
+          <span class="ai-chat-trigger-icon">🤖</span>
+          <span class="ai-chat-trigger-text">跟 AI 聊聊這則故事</span>
+          <span class="ai-chat-trigger-hint">AI 會根據你的心情，給你專屬的反思</span>
+        </button>
+        <div class="ai-chat-container" id="aiChatContainer" style="display:none">
+          <div class="ai-chat-messages" id="aiChatMessages"></div>
+          <div class="ai-chat-input-wrap">
+            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="說說你的想法..." autocomplete="off">
+            <button class="ai-chat-send" id="aiChatSend" onclick="sendAiChat()">送出</button>
+          </div>
+          <div class="ai-chat-note">AI 對話僅供反思參考，不保留紀錄</div>
+        </div>
+      </div>
       <div class="action-row">
         <button class="action-btn primary" onclick="tryAnother()">🪷 再抽一則</button>
         <button class="action-btn" onclick="goToMood()">換個心情</button>
@@ -856,6 +905,181 @@ function shareStory() {
   }
 }
 
+// ===== AI STORY CHAT (Phase 2) =====
+function openAiChat() {
+  const container = document.getElementById('aiChatContainer');
+  const trigger = document.getElementById('aiChatTrigger');
+
+  if (container.style.display !== 'none') {
+    // Already open, toggle close
+    container.style.display = 'none';
+    trigger.classList.remove('active');
+    return;
+  }
+
+  container.style.display = '';
+  trigger.classList.add('active');
+  aiChatHistory = [];
+
+  // Track
+  if (window.Analytics) {
+    Analytics.track('ai_chat_open', { storyId: currentStory.id });
+  }
+
+  // Auto-send first AI message (greeting + personalized reflection prompt)
+  const msgs = document.getElementById('aiChatMessages');
+  msgs.innerHTML = '';
+  addChatBubble('ai', '正在為你準備專屬的反思引導...');
+  sendFirstAiMessage();
+
+  // Focus input
+  setTimeout(() => document.getElementById('aiChatInput').focus(), 300);
+}
+
+async function sendFirstAiMessage() {
+  const story = currentStory;
+  const moodContext = lastUserMoodInput
+    ? `使用者的心情：「${lastUserMoodInput}」\n` : '';
+
+  const systemPrompt = `你是「一念清涼」的 AI 反思引導師。使用者剛讀完一則百喻經寓言故事，你要根據故事內容和使用者的心情，提供溫暖、個人化的反思引導。
+
+故事標題：${story.title}
+故事內容：${story.text.join('\n')}
+寓意：${story.moral}
+延伸闡述：${story.elaboration}
+反思提問：${story.reflection}
+${moodContext}
+你的角色規則：
+1. 像一個溫暖的朋友，不說教、不居高臨下
+2. 用口語化的現代中文，簡潔有力
+3. 每次回覆控制在 80-120 字以內
+4. 主動連結故事寓意到使用者的真實處境
+5. 適時提出一個有深度但不尖銳的反思問題
+6. 可以用故事中的情節做類比
+7. 不要重複說「這則故事告訴我們」這種制式語言
+
+第一則訊息：根據使用者的心情和這則故事，給一段溫暖的開場，然後問一個連結到他們生活的反思問題。不要超過 100 字。`;
+
+  aiChatHistory = [{ role: 'user', parts: [{ text: systemPrompt }] }];
+
+  try {
+    const reply = await callGeminiChat(aiChatHistory);
+    // Replace the loading bubble
+    const msgs = document.getElementById('aiChatMessages');
+    msgs.lastChild.remove();
+    addChatBubble('ai', reply);
+    aiChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+  } catch (err) {
+    const msgs = document.getElementById('aiChatMessages');
+    msgs.lastChild.remove();
+    addChatBubble('ai', '抱歉，AI 暫時無法回應。你可以自己想想這則故事帶給你什麼啟發 🙏');
+    console.warn('AI chat first message failed:', err.message);
+  }
+}
+
+async function sendAiChat() {
+  const input = document.getElementById('aiChatInput');
+  const userText = input.value.trim();
+  if (!userText || isChatting) return;
+  isChatting = true;
+
+  input.value = '';
+  addChatBubble('user', userText);
+
+  // Limit conversation to 10 rounds
+  const userMsgCount = aiChatHistory.filter(m => m.role === 'user').length;
+  if (userMsgCount >= 10) {
+    addChatBubble('ai', '我們聊了很多了 🙏 希望這些反思對你有幫助。帶著這份清涼，繼續你的旅程吧。');
+    document.querySelector('.ai-chat-input-wrap').style.display = 'none';
+    isChatting = false;
+    return;
+  }
+
+  // Add user message to history
+  aiChatHistory.push({ role: 'user', parts: [{ text: userText }] });
+
+  // Show typing indicator
+  addChatBubble('ai', '...');
+  const msgs = document.getElementById('aiChatMessages');
+  const typingBubble = msgs.lastChild;
+
+  try {
+    const reply = await callGeminiChat(aiChatHistory);
+    typingBubble.remove();
+    addChatBubble('ai', reply);
+    aiChatHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+    // Track
+    if (window.Analytics) {
+      Analytics.track('ai_chat_message', {
+        storyId: currentStory.id,
+        round: userMsgCount + 1
+      });
+    }
+  } catch (err) {
+    typingBubble.remove();
+    addChatBubble('ai', '抱歉，AI 暫時無法回應，請再試一次。');
+    // Remove failed user message from history
+    aiChatHistory.pop();
+    console.warn('AI chat failed:', err.message);
+  }
+
+  isChatting = false;
+  input.focus();
+}
+
+async function callGeminiChat(history) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 12000); // 12s timeout for chat
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.model}:generateContent?key=${GEMINI_CONFIG.apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: history,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 300,
+          thinkingConfig: { thinkingBudget: 0 }
+        }
+      })
+    }
+  );
+  clearTimeout(tid);
+
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Empty response');
+
+  // Track API usage
+  const usage = data.usageMetadata;
+  if (usage && window.Analytics) {
+    Analytics.track('ai_api_call', {
+      model: GEMINI_CONFIG.model,
+      promptTokens: usage.promptTokenCount || 0,
+      outputTokens: usage.candidatesTokenCount || 0,
+      totalTokens: usage.totalTokenCount || 0,
+      success: true,
+      feature: 'chat'
+    });
+  }
+
+  return text;
+}
+
+function addChatBubble(role, text) {
+  const msgs = document.getElementById('aiChatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = `ai-chat-bubble ${role}`;
+  bubble.textContent = text;
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
 // ===== PUBLIC API FOR HTML =====
 window.submitMood = submitMood;
 window.seekStory = seekStory;
@@ -872,3 +1096,5 @@ window.tryAnother = tryAnother;
 window.shareStory = shareStory;
 window.randomStory = randomStory;
 window.submitFeedback = submitFeedback;
+window.openAiChat = openAiChat;
+window.sendAiChat = sendAiChat;
