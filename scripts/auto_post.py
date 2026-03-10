@@ -38,6 +38,7 @@ CALENDAR_PATH = "data/content_calendar.json"
 STORIES_PATH = "data/stories.json"
 POST_LOG_PATH = "data/post_log.json"
 IMAGES_DIR = "images/stories"
+CUSTOM_POST_PATH = "data/custom_post.json"  # 自訂貼文（存在即觸發）
 
 # 台灣時區 UTC+8
 TW_TZ = timezone(timedelta(hours=8))
@@ -293,7 +294,90 @@ def main():
             sys.exit(2)
         sys.exit(0)
 
-    # ─── 載入資料 ───
+    # ─── 檢查自訂貼文 ───
+    custom_post = load_json(CUSTOM_POST_PATH)
+    if custom_post:
+        print("📌 偵測到自訂貼文 (custom_post.json)")
+        print(f"📝 主題：{custom_post.get('title', '自訂貼文')}")
+        print(f"🏷️ 類型：{custom_post.get('category', 'custom')}")
+
+        content = {
+            'message': custom_post['message'],
+            'title': custom_post.get('title', '自訂貼文'),
+            'icon': custom_post.get('icon', '📌'),
+            'link': custom_post.get('link'),
+        }
+        image_path = custom_post.get('image_path')
+        if image_path and not os.path.exists(image_path):
+            print(f"⚠️ 指定圖片不存在：{image_path}")
+            image_path = None
+        is_dynamic = False
+
+        # 用自訂貼文的 entry 格式
+        target_date = datetime.now(TW_TZ).strftime('%Y-%m-%d')
+        entry = {
+            'date': target_date,
+            'story_id': custom_post.get('post_id', 'CUSTOM'),
+            'story_title': custom_post.get('title', '自訂貼文'),
+            'platform': 'facebook',
+        }
+
+        print(f"\n📌 自訂貼文")
+        print(f"{'─'*50}")
+        print(f"【貼文預覽】")
+        print(content['message'][:500] + '...' if len(content['message']) > 500 else content['message'])
+        print(f"{'─'*50}")
+        if image_path:
+            print(f"🖼️ 圖片：{image_path}")
+
+        # ─── 乾跑模式 ───
+        if args.dry_run:
+            print("\n🧪 乾跑模式：不會實際發文")
+            sys.exit(0)
+
+        # ─── 正式發文 ───
+        if not page_id or not access_token:
+            print("❌ 未設定 FB_PAGE_ID 或 FB_PAGE_ACCESS_TOKEN")
+            sys.exit(1)
+
+        try:
+            post_type = "圖文" if image_path else "純文字"
+            print(f"\n📤 {post_type}發文中...")
+            post_id = fb_post(
+                page_id=page_id,
+                access_token=access_token,
+                message=content['message'],
+                link=content.get('link') if not image_path else None,
+                image_path=image_path,
+            )
+            print(f"✅ 自訂貼文發文成功！Post ID: {post_id}")
+
+            # 記錄到 log
+            post_log = load_json(POST_LOG_PATH) or []
+            post_log.append({
+                "date": target_date,
+                "story_id": entry['story_id'],
+                "story_title": entry['story_title'],
+                "platform": "facebook",
+                "category": custom_post.get('category', 'custom'),
+                "status": "success",
+                "post_id": post_id,
+                "timestamp": datetime.now(TW_TZ).isoformat(),
+            })
+            save_json(POST_LOG_PATH, post_log)
+
+            # 消費掉 custom_post.json（改名為已完成）
+            done_path = CUSTOM_POST_PATH.replace('.json', f'_done_{target_date}.json')
+            os.rename(CUSTOM_POST_PATH, done_path)
+            print(f"📦 custom_post.json → {done_path}")
+
+        except Exception as e:
+            print(f"❌ 自訂貼文發文失敗：{e}")
+            sys.exit(1)
+
+        sys.exit(0)
+
+    # ─── 載入資料（一般故事排程） ───
     calendar = load_json(CALENDAR_PATH)
     if not calendar:
         print("❌ 找不到 content_calendar.json")
