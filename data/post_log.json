@@ -75,5 +75,15 @@
     "post_id": null,
     "error": null,
     "timestamp": "2026-03-10T14:34:16.725287+08:00"
+  },
+  {
+    "date": "2026-03-10",
+    "story_id": "SITE-001",
+    "story_title": "一念清涼網站使用教學",
+    "platform": "facebook",
+    "category": "website_tutorial",
+    "status": "success",
+    "post_id": "985242784680024_122101616583173816",
+    "timestamp": "2026-03-10T15:31:06.434916+08:00"
   }
 ]
