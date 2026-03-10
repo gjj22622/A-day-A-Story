@@ -58,23 +58,42 @@ const Social = (() => {
   };
 
   /**
-   * 在新視窗開啟 Facebook 分享對話框
+   * Facebook 分享
+   * 手機：用 fb://share 直接呼叫 Facebook app，未安裝則降級到網頁版
+   * 桌機：開啟 Facebook Sharer 網頁對話框
    * @param {Object} story - 故事物件
    */
   const shareToFacebook = (story) => {
     const url = getShareUrl(story);
     const text = generateShareText(story);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // Facebook Sharer 使用 quote 參數來傳遞分享文案
+    // Facebook Sharer URL（手機降級 & 桌機都用這個）
     const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
 
-    window.open(
-      fbShareUrl,
-      'facebook-share',
-      'width=626,height=436,resizable=yes,toolbar=no,location=no'
-    );
+    if (isMobile) {
+      // 手機：用 Facebook app 的 Intent URL
+      // Android: fb://facewebmodal/f?href=  iOS: fb://share?link=
+      const fbAppUrl = `fb://facewebmodal/f?href=${encodeURIComponent(url)}`;
 
-    // 追蹤分享事件
+      const start = Date.now();
+      window.location.href = fbAppUrl;
+
+      // 若 Facebook app 未安裝（800ms 後仍在頁面），降級到網頁版
+      setTimeout(() => {
+        if (Date.now() - start < 1500) {
+          window.open(fbShareUrl, '_blank');
+        }
+      }, 800);
+    } else {
+      // 桌機：開新視窗
+      window.open(
+        fbShareUrl,
+        'facebook-share',
+        'width=626,height=436,resizable=yes,toolbar=no,location=no'
+      );
+    }
+
     trackShareEvent('facebook', story.id);
   };
 
@@ -293,31 +312,12 @@ const Social = (() => {
       });
     }
 
-    // 建立按鈕 HTML
+    // 建立按鈕 HTML — 用 CSS class 控制樣式，避免 inline style 破壞 RWD
     const buttonsHTML = buttons.map((btn) => `
       <button
         class="social-share-btn social-share-btn--${btn.platform}"
         data-platform="${btn.platform}"
-        style="
-          background-color: ${btn.color};
-          border: none;
-          color: white;
-          padding: 10px 16px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 500;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          margin-right: 10px;
-          margin-bottom: 10px;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';"
+        style="background-color: ${btn.color};"
         onclick="window.Social.handleShareButtonClick(event, '${btn.platform}', '${story.id}')"
       >
         <span>${btn.emoji}</span>
@@ -327,7 +327,7 @@ const Social = (() => {
 
     // 將按鈕插入容器
     container.innerHTML = `
-      <div class="social-share-buttons" style="margin: 16px 0;">
+      <div class="social-share-buttons">
         ${buttonsHTML}
       </div>
     `;
