@@ -841,17 +841,17 @@ function buildMoralHTML(story) {
       </div>
       <div class="ai-chat-section" id="aiChatSection">
         <button class="ai-chat-trigger" id="aiChatTrigger" onclick="openAiChat()">
-          <span class="ai-chat-trigger-icon">🤖</span>
-          <span class="ai-chat-trigger-text">跟 AI 聊聊這則故事</span>
-          <span class="ai-chat-trigger-hint">AI 會根據你的心情，給你專屬的反思</span>
+          <span class="ai-chat-trigger-icon">🌳</span>
+          <span class="ai-chat-trigger-text">對樹洞說說</span>
+          <span class="ai-chat-trigger-hint">不記錄、不評判，說完隨風而去</span>
         </button>
         <div class="ai-chat-container" id="aiChatContainer" style="display:none">
           <div class="ai-chat-messages" id="aiChatMessages"></div>
           <div class="ai-chat-input-wrap">
-            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="說說你的想法..." autocomplete="off">
-            <button class="ai-chat-send" id="aiChatSend" onclick="sendAiChat()">送出</button>
+            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="你想說什麼都可以..." autocomplete="off">
+            <button class="ai-chat-send" id="aiChatSend" onclick="sendAiChat()">說</button>
           </div>
-          <div class="ai-chat-note">AI 對話僅供反思參考，不保留紀錄</div>
+          <div class="ai-chat-note">🍃 這裡的對話不會被記錄，說完就隨風散去</div>
         </div>
       </div>
       <div class="action-row">
@@ -932,7 +932,7 @@ function openAiChat() {
   // Auto-send first AI message (greeting + personalized reflection prompt)
   const msgs = document.getElementById('aiChatMessages');
   msgs.innerHTML = '';
-  addChatBubble('ai', '正在為你準備專屬的反思引導...');
+  addChatBubble('ai', '樹洞正在聆聽...');
   sendFirstAiMessage();
 
   // Focus input
@@ -944,7 +944,7 @@ async function sendFirstAiMessage() {
   const moodContext = lastUserMoodInput
     ? `使用者的心情：「${lastUserMoodInput}」\n` : '';
 
-  const systemPrompt = `你是「一念清涼」的 AI 反思引導師。使用者剛讀完一則百喻經寓言故事，你要根據故事內容和使用者的心情，提供溫暖、個人化的反思引導。
+  const systemPrompt = `你是「一念清涼」千年樹洞的聲音。一棵見證了兩千年智慧的菩提古樹，使用者選擇對你傾訴心事。你不說教、不評判、不給標準答案，而是用溫暖的語氣，把故事裡的智慧，輕輕連結到他正在經歷的事。像風穿過樹洞發出的低語，溫柔但有力量。
 
 故事標題：${story.title}
 故事內容：${story.text.join('\n')}
@@ -953,15 +953,16 @@ async function sendFirstAiMessage() {
 反思提問：${story.reflection}
 ${moodContext}
 你的角色規則：
-1. 像一個溫暖的朋友，不說教、不居高臨下
+1. 像風穿過樹洞的低語——溫柔、不說教、不居高臨下
 2. 用口語化的現代中文，簡潔有力
 3. 每次回覆控制在 80-120 字以內
 4. 主動連結故事寓意到使用者的真實處境
 5. 適時提出一個有深度但不尖銳的反思問題
 6. 可以用故事中的情節做類比
 7. 不要重複說「這則故事告訴我們」這種制式語言
+8. 偶爾可以用自然意象（風、葉、光）來回應，但不要過度
 
-第一則訊息：根據使用者的心情和這則故事，給一段溫暖的開場，然後問一個連結到他們生活的反思問題。不要超過 100 字。`;
+第一則訊息：根據使用者的心情和這則故事，用樹洞溫柔的口吻給一段開場，然後問一個連結到他們生活的反思問題。不要超過 100 字。`;
 
   aiChatHistory = [{ role: 'user', parts: [{ text: systemPrompt }] }];
 
@@ -975,7 +976,7 @@ ${moodContext}
   } catch (err) {
     const msgs = document.getElementById('aiChatMessages');
     msgs.lastChild.remove();
-    addChatBubble('ai', '抱歉，AI 暫時無法回應。你可以自己想想這則故事帶給你什麼啟發 🙏');
+    addChatBubble('ai', '樹洞今天有點累了 🍃 不過沒關係，你可以自己靜靜想想這則故事帶給你什麼。');
     console.warn('AI chat first message failed:', err.message);
   }
 }
@@ -992,7 +993,7 @@ async function sendAiChat() {
   // Limit conversation to 10 rounds
   const userMsgCount = aiChatHistory.filter(m => m.role === 'user').length;
   if (userMsgCount >= 10) {
-    addChatBubble('ai', '我們聊了很多了 🙏 希望這些反思對你有幫助。帶著這份清涼，繼續你的旅程吧。');
+    addChatBubble('ai', '謝謝你願意說出來 🍃 這些話已經隨風而去了，但故事裡的智慧會留在你心裡。帶著這份清涼，繼續走吧。');
     document.querySelector('.ai-chat-input-wrap').style.display = 'none';
     isChatting = false;
     return;
@@ -1021,7 +1022,7 @@ async function sendAiChat() {
     }
   } catch (err) {
     typingBubble.remove();
-    addChatBubble('ai', '抱歉，AI 暫時無法回應，請再試一次。');
+    addChatBubble('ai', '風太大了，沒聽清楚，再說一次？');
     // Remove failed user message from history
     aiChatHistory.pop();
     console.warn('AI chat failed:', err.message);

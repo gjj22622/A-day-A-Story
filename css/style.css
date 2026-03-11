@@ -1080,7 +1080,7 @@ a { color: inherit; text-decoration: none; }
   border-style: solid;
   border-color: var(--lotus-gold);
 }
-.ai-chat-trigger-icon { font-size: 1.8rem; }
+.ai-chat-trigger-icon { font-size: 2rem; }
 .ai-chat-trigger-text {
   font-size: 1.05rem;
   color: var(--lotus-gold);
