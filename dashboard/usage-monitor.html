@@ -44,6 +44,31 @@
 
   <main class="container" style="display:none" id="mainContent">
 
+    <!-- 🔴 預算警示 -->
+    <div class="budget-alert budget-danger" id="budgetAlert" style="display:none"></div>
+
+    <!-- 預算使用條 -->
+    <section class="status-card">
+      <h2>💰 月度預算追蹤（上限 $30.00）</h2>
+      <div class="bar-label">
+        <span id="budgetPct">0%</span>
+        <span id="budgetRemaining" class="note">載入中...</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="budgetBar" style="width:0%">0%</div>
+      </div>
+    </section>
+
+    <!-- Match vs Chat 分離統計 -->
+    <section class="status-card">
+      <h2>🤖 AI 功能費用分離（累計）</h2>
+      <div class="pricing-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+        <div><strong>功能</strong></div><div><strong>呼叫次數</strong></div><div><strong>Tokens (In/Out)</strong></div><div><strong>預估費用</strong></div>
+        <div>🔍 AI 匹配</div><div id="matchCalls">-</div><div id="matchTokens">-</div><div id="matchCost">-</div>
+        <div>💬 AI 對話</div><div id="chatCalls">-</div><div id="chatTokens">-</div><div id="chatCost">-</div>
+      </div>
+    </section>
+
     <!-- 定價參考 -->
     <section class="status-card pricing-ref">
       <h2>💰 Gemini 2.5 Flash 定價</h2>
@@ -53,6 +78,7 @@
         <div>Paid Tier</div><div>$0.30</div><div>$2.50</div>
       </div>
       <p class="note">每次 AI 匹配：~5,700 input + ~42 output tokens ≈ Paid 費率 $0.0019/次</p>
+      <p class="note">每次 AI 對話：~800 input + ~200 output tokens ≈ Paid 費率 $0.0007/次</p>
       <p class="note">目前使用 Google AI Studio Free Tier（每日約 1,500 RPD 限制）</p>
     </section>
 
@@ -102,7 +128,9 @@
           <thead>
             <tr>
               <th>日期</th>
-              <th>呼叫</th>
+              <th>總呼叫</th>
+              <th>🔍匹配</th>
+              <th>💬對話</th>
               <th>成功</th>
               <th>失敗</th>
               <th>Input Tokens</th>

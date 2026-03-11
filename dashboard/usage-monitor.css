@@ -137,6 +137,9 @@ body {
   padding: 0.3rem 0;
   border-bottom: 1px solid var(--line);
 }
+.pricing-grid[style*="grid-template-columns: 1fr 1fr 1fr 1fr"] {
+  grid-template-columns: 1fr 1fr 1fr 1fr !important;
+}
 .note {
   color: var(--muted);
   font-size: 0.82rem;
@@ -206,6 +209,30 @@ body {
   color: white;
   transition: width 0.6s ease;
   min-width: 2.5rem;
+}
+
+/* ===== 預算警示 ===== */
+.budget-alert {
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.budget-warning {
+  background: rgba(212, 165, 116, 0.15);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+}
+.budget-danger {
+  background: rgba(231, 76, 60, 0.15);
+  border: 2px solid var(--red);
+  color: var(--red);
+  animation: pulse-border 2s infinite;
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--red); }
+  50% { border-color: rgba(231, 76, 60, 0.4); }
 }
 
 /* ===== 空狀態 ===== */

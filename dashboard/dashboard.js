@@ -146,6 +146,15 @@ function listenToEvents() {
     const feedbackCounts = {};
     const storyFeedbackMap = {};
 
+    // 🤖 AI 對話追蹤
+    const aiChatStats = {
+      chatOpens: 0,        // 開啟對話次數
+      chatMessages: 0,     // 使用者訊息數
+      chatSessions: {},    // { sessionId: messageCount } 計算平均輪數
+      matchMethodAi: 0,    // AI 匹配次數
+      matchMethodKeyword: 0 // Keyword fallback 次數
+    };
+
     // events 結構: events/{date}/{pushId} = { eventName, data, timestamp, ... }
     Object.entries(events).forEach(([date, dateEvents]) => {
       if (!dateEvents || typeof dateEvents !== 'object') return;
@@ -159,6 +168,9 @@ function listenToEvents() {
           case 'story_view':
             const storyId = eventData.storyId || '未知';
             storyViews[storyId] = (storyViews[storyId] || 0) + 1;
+            // 追蹤匹配方式
+            if (eventData.matchMethod === 'ai') aiChatStats.matchMethodAi++;
+            else if (eventData.matchMethod === 'keyword') aiChatStats.matchMethodKeyword++;
             break;
 
           case 'mood_tag_select':
@@ -182,7 +194,8 @@ function listenToEvents() {
             textInputs.push({
               timestamp: event.timestamp || Date.now(),
               text: eventData.text || '',
-              matchedStory: matchId !== '-' ? matchTitle : '-'
+              matchedStory: matchId !== '-' ? matchTitle : '-',
+              matchMethod: eventData.matchMethod || '-'
             });
             break;
 
@@ -198,6 +211,21 @@ function listenToEvents() {
               storyFeedbackMap[fbStoryId][fbType]++;
             }
             break;
+
+          // 🤖 AI 對話事件
+          case 'ai_chat_open':
+            aiChatStats.chatOpens++;
+            break;
+
+          case 'ai_chat_message':
+            aiChatStats.chatMessages++;
+            // 用 sessionId 追蹤每次對話的輪數
+            const chatSessionId = event.sessionId || 'unknown';
+            if (!aiChatStats.chatSessions[chatSessionId]) {
+              aiChatStats.chatSessions[chatSessionId] = 0;
+            }
+            aiChatStats.chatSessions[chatSessionId]++;
+            break;
         }
       });
     });
@@ -210,8 +238,11 @@ function listenToEvents() {
     updateFeedbackChart(feedbackCounts);
     updateStoryFeedbackChart(storyFeedbackMap);
 
+    // 🤖 更新 AI 對話指標
+    updateAiChatMetrics(aiChatStats, storyViews);
+
     // 🔴 每日優化監控面板
-    updateOptimizeMetrics(events, textInputs, storyViews);
+    updateOptimizeMetrics(events, textInputs, storyViews, aiChatStats);
   });
 
   // 監聯過去 30 天的日期統計
@@ -219,9 +250,49 @@ function listenToEvents() {
 }
 
 /**
+ * 🤖 更新 AI 對話指標
+ */
+function updateAiChatMetrics(aiChatStats, storyViews) {
+  // AI 對話開啟次數
+  document.getElementById('ai-chat-opens').textContent = aiChatStats.chatOpens || '-';
+
+  // AI 對話訊息數
+  document.getElementById('ai-chat-messages').textContent = aiChatStats.chatMessages || '-';
+
+  // 平均對話輪數
+  const sessionCounts = Object.values(aiChatStats.chatSessions);
+  const avgRounds = sessionCounts.length > 0
+    ? (sessionCounts.reduce((a, b) => a + b, 0) / sessionCounts.length).toFixed(1)
+    : '-';
+  document.getElementById('ai-chat-avg-rounds').textContent = avgRounds;
+  document.getElementById('ai-chat-avg-detail').textContent =
+    sessionCounts.length > 0 ? `共 ${sessionCounts.length} 次對話` : '尚無數據';
+
+  // 對話使用率 = 開啟對話次數 / 故事閱讀次數
+  const totalViews = Object.values(storyViews).reduce((a, b) => a + b, 0);
+  const chatRate = totalViews > 0
+    ? Math.round((aiChatStats.chatOpens / totalViews) * 100) : 0;
+  document.getElementById('ai-chat-rate').textContent = totalViews > 0 ? chatRate + '%' : '-';
+  document.getElementById('ai-chat-rate-detail').textContent =
+    totalViews > 0 ? `${aiChatStats.chatOpens} 次對話 / ${totalViews} 次閱讀` : '尚無數據';
+
+  // AI 匹配方式比例
+  const totalMatch = aiChatStats.matchMethodAi + aiChatStats.matchMethodKeyword;
+  if (totalMatch > 0) {
+    const aiPct = Math.round((aiChatStats.matchMethodAi / totalMatch) * 100);
+    document.getElementById('ai-match-method').textContent = aiPct + '%';
+    document.getElementById('ai-match-method-detail').textContent =
+      `AI ${aiChatStats.matchMethodAi} 次 / Keyword ${aiChatStats.matchMethodKeyword} 次`;
+  } else {
+    document.getElementById('ai-match-method').textContent = '-';
+    document.getElementById('ai-match-method-detail').textContent = '尚無數據';
+  }
+}
+
+/**
  * 🔴 每日優化核心：計算並更新所有優化監控指標
  */
-function updateOptimizeMetrics(events, textInputs, storyViews) {
+function updateOptimizeMetrics(events, textInputs, storyViews, aiChatStats) {
   // === 1. 匹配失敗率 ===
   const totalInputs = textInputs.length;
   const failedInputs = textInputs.filter(t => t.matchedStory === '-');
@@ -300,22 +371,29 @@ function updateOptimizeMetrics(events, textInputs, storyViews) {
     });
   });
 
+  // AI 對話次數（從 aiChatStats 取得）
+  const aiChatCount = aiChatStats ? aiChatStats.chatOpens : 0;
+
   document.getElementById('funnel-session').textContent = sessionCount;
   document.getElementById('funnel-view').textContent = storyViewCount;
   document.getElementById('funnel-feedback').textContent = feedbackCount;
+  document.getElementById('funnel-aichat').textContent = aiChatCount;
   document.getElementById('funnel-share').textContent = shareCount;
 
   if (sessionCount > 0) {
     const viewRate = Math.round((storyViewCount / sessionCount) * 100);
     const fbRate = Math.round((feedbackCount / sessionCount) * 100);
+    const aiChatRate = Math.round((aiChatCount / sessionCount) * 100);
     const shareRate = Math.round((shareCount / sessionCount) * 100);
 
     document.getElementById('funnel-view-rate').textContent = viewRate + '%';
     document.getElementById('funnel-feedback-rate').textContent = fbRate + '%';
+    document.getElementById('funnel-aichat-rate').textContent = aiChatRate + '%';
     document.getElementById('funnel-share-rate').textContent = shareRate + '%';
 
     document.getElementById('funnel-bar-view').style.width = Math.max(viewRate, 2) + '%';
     document.getElementById('funnel-bar-feedback').style.width = Math.max(fbRate, 2) + '%';
+    document.getElementById('funnel-bar-aichat').style.width = Math.max(aiChatRate, 2) + '%';
     document.getElementById('funnel-bar-share').style.width = Math.max(shareRate, 2) + '%';
   }
 
@@ -681,7 +759,7 @@ function updateRecentInputsTable(textInputs) {
   const tbody = document.getElementById('recent-inputs-tbody');
 
   if (sorted.length === 0) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">尚無數據</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">尚無數據</td></tr>';
     return;
   }
 
@@ -695,11 +773,16 @@ function updateRecentInputsTable(textInputs) {
       second: '2-digit'
     });
 
+    const methodLabel = entry.matchMethod === 'ai' ? '🤖 AI'
+      : entry.matchMethod === 'keyword' ? '🔑 關鍵字'
+      : '-';
+
     return `
       <tr>
         <td>${timeStr}</td>
         <td>${escapeHtml(entry.text)}</td>
         <td>${escapeHtml(entry.matchedStory)}</td>
+        <td>${methodLabel}</td>
       </tr>
     `;
   }).join('');

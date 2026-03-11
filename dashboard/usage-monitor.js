@@ -18,6 +18,12 @@ const PRICING = {
   freeRPD: 1500            // Free Tier: ~1,500 requests per day
 };
 
+// ===== 預算管理 =====
+const BUDGET = {
+  monthlyLimit: 30.00,     // 每月預算上限 (USD)
+  warningThreshold: 0.8    // 80% 時顯示警告
+};
+
 // ===== 登入驗證 =====
 const AUTH_USER = 'Admin';
 const AUTH_HASH = 'ea34564517d272f65dadf8347081041d337076b0dff46f72ca2bc3643b6222d4';
@@ -113,7 +119,14 @@ function initUsageMonitor() {
 // ===== 解析所有事件 =====
 function processAllEvents(allEvents) {
   const today = getTodayStr();
-  const dailyMap = {}; // { "2026-03-10": { calls, success, fail, inputTokens, outputTokens } }
+  const dailyMap = {}; // { "2026-03-10": { calls, success, fail, inputTokens, outputTokens, match:{...}, chat:{...} } }
+
+  const emptyFeatureStats = () => ({ calls: 0, success: 0, fail: 0, inputTokens: 0, outputTokens: 0 });
+  const emptyDayStats = () => ({
+    calls: 0, success: 0, fail: 0, inputTokens: 0, outputTokens: 0,
+    match: emptyFeatureStats(),
+    chat: emptyFeatureStats()
+  });
 
   // 遍歷每個日期
   for (const date of Object.keys(allEvents)) {
@@ -125,19 +138,28 @@ function processAllEvents(allEvents) {
       const evt = dayEvents[evtId];
       if (!evt || evt.eventName !== 'ai_api_call') continue;
 
-      if (!dailyMap[date]) {
-        dailyMap[date] = { calls: 0, success: 0, fail: 0, inputTokens: 0, outputTokens: 0 };
-      }
+      if (!dailyMap[date]) dailyMap[date] = emptyDayStats();
 
       const d = dailyMap[date];
       d.calls++;
 
+      // 辨識 feature: 'match' 或 'chat'
+      const feature = evt.feature || 'match'; // 預設為 match（向下相容）
+      const featureStats = feature === 'chat' ? d.chat : d.match;
+      featureStats.calls++;
+
       if (evt.success === true) {
         d.success++;
-        d.inputTokens += (evt.promptTokens || 0);
-        d.outputTokens += (evt.outputTokens || 0);
+        featureStats.success++;
+        const inTk = evt.promptTokens || 0;
+        const outTk = evt.outputTokens || 0;
+        d.inputTokens += inTk;
+        d.outputTokens += outTk;
+        featureStats.inputTokens += inTk;
+        featureStats.outputTokens += outTk;
       } else {
         d.fail++;
+        featureStats.fail++;
       }
     }
   }
@@ -146,11 +168,11 @@ function processAllEvents(allEvents) {
   const sortedDates = Object.keys(dailyMap).sort().reverse();
 
   // 計算今日統計
-  const todayData = dailyMap[today] || { calls: 0, success: 0, fail: 0, inputTokens: 0, outputTokens: 0 };
+  const todayData = dailyMap[today] || emptyDayStats();
   renderTodayStats(todayData);
 
   // 計算累計統計
-  const totalData = { calls: 0, success: 0, fail: 0, inputTokens: 0, outputTokens: 0 };
+  const totalData = emptyDayStats();
   for (const date of sortedDates) {
     const d = dailyMap[date];
     totalData.calls += d.calls;
@@ -158,11 +180,23 @@ function processAllEvents(allEvents) {
     totalData.fail += d.fail;
     totalData.inputTokens += d.inputTokens;
     totalData.outputTokens += d.outputTokens;
+    totalData.match.calls += d.match.calls;
+    totalData.match.inputTokens += d.match.inputTokens;
+    totalData.match.outputTokens += d.match.outputTokens;
+    totalData.chat.calls += d.chat.calls;
+    totalData.chat.inputTokens += d.chat.inputTokens;
+    totalData.chat.outputTokens += d.chat.outputTokens;
   }
   renderTotalStats(totalData);
 
   // Free Tier 用量條
   renderUsageBar(todayData.calls);
+
+  // 🔴 預算警示
+  renderBudgetAlert(totalData);
+
+  // Match vs Chat 分離統計
+  renderFeatureBreakdown(totalData);
 
   // 每日趨勢圖（最近30天）
   renderDailyChart(dailyMap);
@@ -341,7 +375,7 @@ function renderDailyTable(sortedDates, dailyMap) {
   const tbody = document.getElementById('dailyLogBody');
 
   if (sortedDates.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7">尚無資料</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9">尚無資料</td></tr>';
     return;
   }
 
@@ -352,6 +386,8 @@ function renderDailyTable(sortedDates, dailyMap) {
     return `<tr>
       <td>${date}</td>
       <td>${fmtNum(d.calls)}</td>
+      <td>${fmtNum(d.match.calls)}</td>
+      <td>${fmtNum(d.chat.calls)}</td>
       <td>${fmtNum(d.success)} <span style="color:var(--muted);font-size:0.8em">(${successPct}%)</span></td>
       <td>${d.fail > 0 ? '<span style="color:#e74c3c">' + d.fail + '</span>' : '0'}</td>
       <td>${fmtNum(d.inputTokens)}</td>
@@ -359,4 +395,61 @@ function renderDailyTable(sortedDates, dailyMap) {
       <td>${fmtUsd(cost)}</td>
     </tr>`;
   }).join('');
+}
+
+// ===== 🔴 預算警示 =====
+function renderBudgetAlert(totalData) {
+  const totalCost = calcCost(totalData.inputTokens, totalData.outputTokens);
+  const remaining = BUDGET.monthlyLimit - totalCost;
+  const usagePct = (totalCost / BUDGET.monthlyLimit) * 100;
+
+  const alertEl = document.getElementById('budgetAlert');
+  const remainEl = document.getElementById('budgetRemaining');
+  const barEl = document.getElementById('budgetBar');
+  const pctEl = document.getElementById('budgetPct');
+
+  if (!alertEl) return; // 防止 HTML 未更新
+
+  // 更新預算條
+  const barPct = Math.min(usagePct, 100);
+  barEl.style.width = barPct.toFixed(1) + '%';
+  barEl.textContent = barPct.toFixed(1) + '%';
+  pctEl.textContent = barPct.toFixed(1) + '%';
+  remainEl.textContent = `已用 ${fmtUsd(totalCost)} / 預算 $${BUDGET.monthlyLimit.toFixed(2)} | 剩餘 ${fmtUsd(remaining)}`;
+
+  // 顏色指示
+  if (usagePct >= 100) {
+    barEl.style.background = '#e74c3c';
+    alertEl.style.display = '';
+    alertEl.className = 'budget-alert budget-danger';
+    alertEl.innerHTML = '🚨 <strong>預算超支！</strong>本月 AI API 費用已超過 $' + BUDGET.monthlyLimit.toFixed(2) +
+      ' 上限，目前累計 ' + fmtUsd(totalCost) + '。請立即檢查 API 使用量或調整配額。';
+  } else if (usagePct >= BUDGET.warningThreshold * 100) {
+    barEl.style.background = '#D4A574';
+    alertEl.style.display = '';
+    alertEl.className = 'budget-alert budget-warning';
+    alertEl.innerHTML = '⚠️ <strong>預算警告</strong>：本月已使用 ' + barPct.toFixed(1) + '% 預算（' +
+      fmtUsd(totalCost) + ' / $' + BUDGET.monthlyLimit.toFixed(2) + '），剩餘 ' + fmtUsd(remaining) + '。';
+  } else {
+    barEl.style.background = '#2A6B5E';
+    alertEl.style.display = 'none';
+  }
+}
+
+// ===== Match vs Chat 功能分離統計 =====
+function renderFeatureBreakdown(totalData) {
+  const matchCost = calcCost(totalData.match.inputTokens, totalData.match.outputTokens);
+  const chatCost = calcCost(totalData.chat.inputTokens, totalData.chat.outputTokens);
+
+  // Match 統計
+  document.getElementById('matchCalls').textContent = fmtNum(totalData.match.calls);
+  document.getElementById('matchTokens').textContent =
+    fmtNum(totalData.match.inputTokens) + ' / ' + fmtNum(totalData.match.outputTokens);
+  document.getElementById('matchCost').textContent = fmtUsd(matchCost);
+
+  // Chat 統計
+  document.getElementById('chatCalls').textContent = fmtNum(totalData.chat.calls);
+  document.getElementById('chatTokens').textContent =
+    fmtNum(totalData.chat.inputTokens) + ' / ' + fmtNum(totalData.chat.outputTokens);
+  document.getElementById('chatCost').textContent = fmtUsd(chatCost);
 }
