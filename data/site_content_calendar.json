@@ -147,6 +147,13 @@
       "category": "dashboard_insight",
       "title": "隨緣一則 vs 心情匹配",
       "description": "兩種找故事的方式，哪種更多人用？"
+    },
+    {
+      "date": "2026-03-13",
+      "post_id": "SITE-022",
+      "category": "release_note",
+      "title": "v3.2.0 AI 故事對話功能上線",
+      "description": "讀完故事後可以跟 AI 聊聊，AI 會根據你的心情和故事內容，給你專屬的反思與陪伴。最多 10 輪對話。"
     }
   ]
 }
