@@ -1,10 +1,10 @@
-h# 一念清涼 — Facebook 全自動發文 Workflow
+# 一念清涼 — Facebook 全自動發文 Workflow
 # 每日台灣時間 14:00 (UTC 06:00) 自動發文到 FB 粉專
 #
 # 需要在 GitHub Repo Settings > Secrets 設定：
 #   FB_PAGE_ID            — Facebook 粉絲專頁 ID
 #   FB_PAGE_ACCESS_TOKEN  — 長效 Page Access Token
-#   GEMINI_API_KEY        — Google AI Studio APIh Key（Gemini 產圖用）
+#   GEMINI_API_KEY        — Google AI Studio API Key（Gemini 產圖用）
 #
 # 手動觸發：Actions > Auto Post > Run workflow
 
