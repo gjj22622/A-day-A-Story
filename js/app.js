@@ -6,7 +6,7 @@ let currentStory = null;
 let typewriterInterval = null;
 let litCount = 0;
 let buildIdx = 0;
-let recentStoryIds = []; // 記錄最近看過的故事，避免短期重複
+let recentStoryIds = []; // 記錄最近看過的故事，避免短期重複（50則冷卻）
 let isSubmitting = false; // 防止重複提交
 let lastUserMoodInput = ''; // 保存使用者心情輸入，供 AI 對話使用
 let aiChatHistory = []; // AI 對話歷史
@@ -100,7 +100,7 @@ ${storyIndex}${exclude}
 
     const chosen = candidates[0];
     recentStoryIds.push(chosen.id);
-    if (recentStoryIds.length > 20) recentStoryIds.shift();
+    if (recentStoryIds.length > 50) recentStoryIds.shift();
 
     console.log(`🤖 AI picked: ${chosen.title} (${chosen.id}) from [${picks.join(', ')}]`);
     return chosen;
@@ -343,12 +343,16 @@ function seekStory(userInput) {
     selectedTags.forEach(tag => {
       if (allTags.includes(tag)) score += 2;
     });
+    // 冷卻懲罰：最近 50 則看過的故事大幅扣分，避免壟斷
+    if (recentStoryIds.includes(story.id)) score -= 10;
     score += Math.random() * 0.5;
     return { story, score };
   });
 
   scored.sort((a, b) => b.score - a.score);
   currentStory = scored[0].story;
+  recentStoryIds.push(currentStory.id);
+  if (recentStoryIds.length > 50) recentStoryIds.shift();
   stories.forEach(s => delete s._inputScore);
 }
 
@@ -761,7 +765,7 @@ function randomStory() {
 
   // 記錄到最近看過清單
   recentStoryIds.push(currentStory.id);
-  if (recentStoryIds.length > 20) recentStoryIds.shift();
+  if (recentStoryIds.length > 50) recentStoryIds.shift();
 
   // Reset states
   litCount = 0;
@@ -881,7 +885,7 @@ function tryAnother() {
   }
   currentStory = pool[Math.floor(Math.random() * pool.length)];
   recentStoryIds.push(currentStory.id);
-  if (recentStoryIds.length > 20) recentStoryIds.shift();
+  if (recentStoryIds.length > 50) recentStoryIds.shift();
 
   // Reset states
   litCount = 0;

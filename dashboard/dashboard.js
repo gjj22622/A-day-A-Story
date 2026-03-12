@@ -39,6 +39,36 @@ const charts = {
   storyFeedback: null
 };
 
+// 時間範圍篩選
+let selectedRange = 'all'; // 'all', '1', '3', '7', '14', '30'
+let rawEvents = {};       // 儲存 Firebase 原始事件資料
+let rawDailyStats = {};   // 儲存 Firebase 原始 daily_stats 資料
+
+// 取得日期範圍起始日（YYYY-MM-DD）
+function getDateRangeStart(range) {
+  if (range === 'all') return null;
+  const d = new Date();
+  d.setDate(d.getDate() - (parseInt(range) - 1));
+  return d.toISOString().split('T')[0];
+}
+
+// 篩選事件：只保留範圍內的日期
+function filterEventsByRange(events, range) {
+  const startDate = getDateRangeStart(range);
+  if (!startDate) return events; // 'all' = 不篩選
+  const filtered = {};
+  for (const date of Object.keys(events)) {
+    if (date >= startDate) filtered[date] = events[date];
+  }
+  return filtered;
+}
+
+// 取得範圍顯示標籤
+function getRangeLabel(range) {
+  if (range === 'all') return '全部';
+  return `近 ${range} 天`;
+}
+
 // 色彩配置
 const brandColors = {
   gold: '#D4A574',
@@ -56,6 +86,19 @@ const brandColors = {
  */
 function initDashboard() {
   console.log('初始化儀表板...');
+
+  // 時間範圍按鈕綁定
+  document.querySelectorAll('.time-range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.time-range-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedRange = btn.dataset.range;
+      console.log(`切換時間範圍: ${getRangeLabel(selectedRange)}`);
+      // 重新渲染（用已快取的原始資料）
+      processAndRenderEvents();
+      processAndRenderDailyStats();
+    });
+  });
 
   // 先載入故事標題對照表，完成後再監聽事件
   loadStoryTitles().then(() => {
@@ -98,35 +141,48 @@ function listenToDailyStats() {
   const dailyStatsRef = database.ref('daily_stats');
 
   dailyStatsRef.on('value', (snapshot) => {
-    const data = snapshot.val() || {};
-
-    // 計算今天和總數
-    const today = new Date().toISOString().split('T')[0];
-    let todaySessions = 0;
-    let totalSessions = 0;
-    let todayViews = 0;
-
-    let todayFeedback = 0;
-    let todayRandom = 0;
-
-    Object.entries(data).forEach(([date, stats]) => {
-      const sessionCount = stats.session_start || 0;
-      totalSessions += sessionCount;
-
-      if (date === today) {
-        todaySessions = sessionCount;
-        todayViews = stats.story_view || 0;
-        todayFeedback = stats.mood_feedback || 0;
-        todayRandom = stats.random_story || 0;
-      }
-    });
-
-    document.getElementById('today-sessions').textContent = todaySessions;
-    document.getElementById('total-sessions').textContent = totalSessions;
-    document.getElementById('today-views').textContent = todayViews;
-    document.getElementById('today-feedback').textContent = todayFeedback;
-    document.getElementById('today-random').textContent = todayRandom;
+    rawDailyStats = snapshot.val() || {};
+    processAndRenderDailyStats();
   });
+}
+
+function processAndRenderDailyStats() {
+  const data = rawDailyStats;
+  const startDate = getDateRangeStart(selectedRange);
+  const rangeLabel = getRangeLabel(selectedRange);
+
+  let rangeSessions = 0;
+  let totalSessions = 0;
+  let rangeViews = 0;
+  let rangeFeedback = 0;
+  let rangeRandom = 0;
+
+  Object.entries(data).forEach(([date, stats]) => {
+    const sessionCount = stats.session_start || 0;
+    totalSessions += sessionCount;
+
+    // 篩選範圍內的資料
+    if (!startDate || date >= startDate) {
+      rangeSessions += sessionCount;
+      rangeViews += stats.story_view || 0;
+      rangeFeedback += stats.mood_feedback || 0;
+      rangeRandom += stats.random_story || 0;
+    }
+  });
+
+  document.getElementById('today-sessions').textContent = rangeSessions;
+  document.getElementById('total-sessions').textContent = totalSessions;
+  document.getElementById('today-views').textContent = rangeViews;
+  document.getElementById('today-feedback').textContent = rangeFeedback;
+  document.getElementById('today-random').textContent = rangeRandom;
+
+  // 更新 KPI 標籤文字
+  const prefix = selectedRange === 'all' ? '' : `${rangeLabel} `;
+  const el = (id) => document.getElementById(id);
+  if (el('label-sessions')) el('label-sessions').textContent = prefix + '訪客數';
+  if (el('label-views')) el('label-views').textContent = prefix + '故事閱讀';
+  if (el('label-feedback')) el('label-feedback').textContent = prefix + '心情回饋';
+  if (el('label-random')) el('label-random').textContent = prefix + '隨緣一則';
 }
 
 /**
@@ -136,7 +192,21 @@ function listenToEvents() {
   const eventsRef = database.ref('events');
 
   eventsRef.on('value', (snapshot) => {
-    const events = snapshot.val() || {};
+    rawEvents = snapshot.val() || {};
+    processAndRenderEvents();
+  });
+
+  // 監聽過去 30 天的日期統計
+  listenToDailyTrendChart();
+}
+
+function processAndRenderEvents() {
+    const events = filterEventsByRange(rawEvents, selectedRange);
+    const rangeLabel = getRangeLabel(selectedRange);
+
+    // 更新漏斗標題
+    const funnelTitle = document.getElementById('funnel-title');
+    if (funnelTitle) funnelTitle.textContent = `📊 轉換漏斗（${rangeLabel}）`;
 
     // 提取各類事件數據
     const storyViews = {};
@@ -243,10 +313,6 @@ function listenToEvents() {
 
     // 🔴 每日優化監控面板
     updateOptimizeMetrics(events, textInputs, storyViews, aiChatStats);
-  });
-
-  // 監聯過去 30 天的日期統計
-  listenToDailyTrendChart();
 }
 
 /**
@@ -753,7 +819,7 @@ function listenToDailyTrendChart() {
 function updateRecentInputsTable(textInputs) {
   // 排序並取最新 20 筆
   const sorted = textInputs
-    .sort((a, b) => b.timestamp - a.timestamp)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     .slice(0, 20);
 
   const tbody = document.getElementById('recent-inputs-tbody');

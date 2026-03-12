@@ -47,6 +47,17 @@
   <!-- 主要容器 -->
   <main class="dashboard-container" style="display:none;" id="dashboardMain">
 
+    <!-- 時間範圍篩選器 -->
+    <div class="time-range-bar" id="timeRangeBar">
+      <span class="time-range-label">時間範圍：</span>
+      <button class="time-range-btn" data-range="1">1 天</button>
+      <button class="time-range-btn" data-range="3">3 天</button>
+      <button class="time-range-btn" data-range="7">7 天</button>
+      <button class="time-range-btn" data-range="14">14 天</button>
+      <button class="time-range-btn" data-range="30">30 天</button>
+      <button class="time-range-btn active" data-range="all">全部</button>
+    </div>
+
     <!-- 統計概覽區塊 -->
     <section class="stats-overview">
       <div class="stat-card">
@@ -56,31 +67,31 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">今日訪客數</div>
+        <div class="stat-label" id="label-sessions">訪客數</div>
         <div class="stat-value" id="today-sessions">-</div>
         <div class="stat-unit">人</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">總訪客數</div>
+        <div class="stat-label">累計總訪客</div>
         <div class="stat-value" id="total-sessions">-</div>
         <div class="stat-unit">人</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">今日故事閱讀</div>
+        <div class="stat-label" id="label-views">故事閱讀</div>
         <div class="stat-value" id="today-views">-</div>
         <div class="stat-unit">次</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">今日心情回饋</div>
+        <div class="stat-label" id="label-feedback">心情回饋</div>
         <div class="stat-value" id="today-feedback">-</div>
         <div class="stat-unit">則</div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">今日隨緣一則</div>
+        <div class="stat-label" id="label-random">隨緣一則</div>
         <div class="stat-value" id="today-random">-</div>
         <div class="stat-unit">次</div>
       </div>
@@ -149,7 +160,7 @@
     <!-- 轉換漏斗 -->
     <section class="charts-section">
       <div class="chart-container chart-wide">
-        <h2 class="chart-title">📊 轉換漏斗（全時間）</h2>
+        <h2 class="chart-title" id="funnel-title">📊 轉換漏斗（全部）</h2>
         <div class="funnel-container" id="funnel-container">
           <div class="funnel-step">
             <div class="funnel-bar" id="funnel-bar-session" style="width:100%"></div>
