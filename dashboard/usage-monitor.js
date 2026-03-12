@@ -63,12 +63,23 @@ function showMonitor() {
   initUsageMonitor();
 }
 
-// 自動檢查登入狀態
-try {
-  if (sessionStorage.getItem('yinian_usage_auth') === 'true') {
-    showMonitor();
+// 自動檢查登入狀態（確保 Firebase SDK 已載入後再初始化）
+function autoLoginCheck() {
+  try {
+    if (sessionStorage.getItem('yinian_usage_auth') === 'true') {
+      showMonitor();
+    }
+  } catch(e) {
+    console.error('自動登入檢查失敗:', e);
   }
-} catch(e) {}
+}
+
+// 確保 DOM 和外部腳本都載入完成後再執行
+if (document.readyState === 'complete') {
+  autoLoginCheck();
+} else {
+  window.addEventListener('load', autoLoginCheck);
+}
 
 // ===== 工具函數 =====
 function fmtNum(n) {
@@ -99,8 +110,17 @@ let dailyChart = null;
 function initUsageMonitor() {
   if (database) return; // 避免重複初始化
 
-  firebase.initializeApp(firebaseConfig);
-  database = firebase.database();
+  try {
+    // 避免重複初始化 Firebase App
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    database = firebase.database();
+  } catch(e) {
+    console.error('Firebase 初始化失敗:', e);
+    document.getElementById('updatedAt').textContent = 'Firebase 初始化失敗，請重新整理頁面';
+    return;
+  }
 
   document.getElementById('updatedAt').textContent = '正在載入 Firebase 資料...';
 
@@ -143,16 +163,19 @@ function processAllEvents(allEvents) {
       const d = dailyMap[date];
       d.calls++;
 
+      // analytics.js 將資料包在 evt.data 中，向下相容也支援根層級
+      const evtData = evt.data || evt;
+
       // 辨識 feature: 'match' 或 'chat'
-      const feature = evt.feature || 'match'; // 預設為 match（向下相容）
+      const feature = evtData.feature || 'match'; // 預設為 match（向下相容）
       const featureStats = feature === 'chat' ? d.chat : d.match;
       featureStats.calls++;
 
-      if (evt.success === true) {
+      if (evtData.success === true) {
         d.success++;
         featureStats.success++;
-        const inTk = evt.promptTokens || 0;
-        const outTk = evt.outputTokens || 0;
+        const inTk = evtData.promptTokens || 0;
+        const outTk = evtData.outputTokens || 0;
         d.inputTokens += inTk;
         d.outputTokens += outTk;
         featureStats.inputTokens += inTk;
