@@ -234,6 +234,7 @@ def generate_post_with_gemini(story, api_key):
 
     req = urllib.request.Request(url, data=payload, method="POST", headers={
         "Content-Type": "application/json",
+        "Referer": "https://gjj22622.github.io/",
     })
 
     try:

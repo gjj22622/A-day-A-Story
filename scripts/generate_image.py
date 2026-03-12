@@ -118,7 +118,8 @@ def generate_with_gemini(prompt, api_key, output_path):
 
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(url, data=data, method='POST', headers={
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Referer': 'https://gjj22622.github.io/',
     })
 
     try:
