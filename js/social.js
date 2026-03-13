@@ -54,7 +54,9 @@ const Social = (() => {
    */
   const getShareUrl = (story) => {
     if (!story || !story.id) return BASE_URL;
-    return BASE_URL + '?story=' + encodeURIComponent(story.id);
+    // 使用 per-story 分享頁（含 OG meta tags），
+    // FB/LINE 爬蟲會讀到正確的 og:image 縮圖
+    return BASE_URL + '/stories/' + encodeURIComponent(story.id) + '/';
   };
 
   /**
