@@ -138,5 +138,16 @@
     "post_id": "985242784680024_122102737719173816",
     "error": null,
     "timestamp": "2026-03-13T09:07:25.155054+08:00"
+  },
+  {
+    "date": "2026-03-13",
+    "story_id": "SITE-022",
+    "story_title": "v3.2.0 AI 故事對話功能上線",
+    "platform": "facebook",
+    "category": "release_note",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122102739861173816",
+    "timestamp": "2026-03-13T09:28:04.118829+08:00"
   }
 ]
