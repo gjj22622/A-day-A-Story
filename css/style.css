@@ -1189,4 +1189,11 @@ a { color: inherit; text-decoration: none; }
   .ai-chat-messages { max-height: 280px; padding: 0.8rem; }
   .ai-chat-trigger { padding: 1rem; }
   .ai-chat-trigger-text { font-size: 0.95rem; }
+  .ai-chat-input-wrap { padding: 0.6rem; gap: 0.4rem; }
+  .ai-chat-input { min-width: 0; padding: 0.6rem 0.7rem; font-size: 0.9rem; }
+  .ai-chat-send { padding: 0.6rem 0.9rem; font-size: 0.85rem; flex-shrink: 0; }
+}
+@media (max-width: 375px) {
+  .ai-chat-input-wrap { padding: 0.5rem; }
+  .ai-chat-send { padding: 0.5rem 0.7rem; }
 }
