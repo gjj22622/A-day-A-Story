@@ -160,5 +160,16 @@
     "post_id": "985242784680024_122103340311173816",
     "error": null,
     "timestamp": "2026-03-14T15:01:01.240475+08:00"
+  },
+  {
+    "date": "2026-03-14",
+    "story_id": "SITE-003",
+    "story_title": "隨緣一則功能",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122103405213173816",
+    "timestamp": "2026-03-14T22:31:47.926486+08:00"
   }
 ]
