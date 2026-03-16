@@ -203,5 +203,16 @@
     "post_id": "985242784680024_122103763137173816",
     "error": null,
     "timestamp": "2026-03-16T15:43:42.825827+08:00"
+  },
+  {
+    "date": "2026-03-16",
+    "story_id": "SITE-004",
+    "story_title": "5種故事呈現風格",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122103822717173816",
+    "timestamp": "2026-03-16T23:03:46.387173+08:00"
   }
 ]
