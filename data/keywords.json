@@ -94,6 +94,16 @@
     "心痛": ["sadness", "grief"],
     "無奈": ["frustration", "acceptance"],
     "委曲": ["resentment"],
-    "AI": ["anxiety", "change_transition", "fear"]
+    "AI": ["anxiety", "change_transition", "fear"],
+
+    "不想": ["exhaustion", "frustration", "motivation"],
+    "不想工作": ["exhaustion", "career_failure", "motivation"],
+    "懶": ["exhaustion", "motivation"],
+    "沒動力": ["motivation", "exhaustion", "confusion"],
+    "提不起勁": ["exhaustion", "motivation", "sadness"],
+    "厭倦": ["exhaustion", "frustration", "change_transition"],
+    "倦怠": ["exhaustion", "career_failure"],
+    "不能": ["frustration", "self_doubt"],
+    "不會": ["self_doubt", "frustration", "courage_needed"]
   }
 }
