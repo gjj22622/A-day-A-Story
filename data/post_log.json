@@ -247,5 +247,16 @@
     "status": "success",
     "post_id": "985242784680024_122104166583173816",
     "timestamp": "2026-03-18T23:06:29.987642+08:00"
+  },
+  {
+    "date": "2026-03-19",
+    "story_id": "BDH-018",
+    "story_title": "上樓磨刀",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122104274607173816",
+    "error": null,
+    "timestamp": "2026-03-19T15:09:34.730535+08:00"
   }
 ]
