@@ -44,7 +44,8 @@
       "post_id": "SITE-006",
       "category": "dashboard_insight",
       "title": "上週大家最常輸入的心情",
-      "description": "從匿名數據看：原來大家都在煩這件事"
+      "description": "從匿名數據看：原來大家都在煩這件事",
+      "status": "posted"
     },
     {
       "date": "2026-03-21",
