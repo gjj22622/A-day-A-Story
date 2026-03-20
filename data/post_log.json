@@ -269,5 +269,16 @@
     "status": "success",
     "post_id": "985242784680024_122104340097173816",
     "timestamp": "2026-03-19T22:52:18.881661+08:00"
+  },
+  {
+    "date": "2026-03-20",
+    "story_id": "BDH-055",
+    "story_title": "想幫國王剃鬍子",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122104457013173816",
+    "error": null,
+    "timestamp": "2026-03-20T15:06:52.542543+08:00"
   }
 ]
