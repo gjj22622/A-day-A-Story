@@ -291,5 +291,16 @@
     "post_id": "985242784680024_122104640703173816",
     "error": null,
     "timestamp": "2026-03-21T14:57:35.355217+08:00"
+  },
+  {
+    "date": "2026-03-21",
+    "story_id": "SITE-007",
+    "story_title": "點亮故事（lines 風格）",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122104702413173816",
+    "timestamp": "2026-03-21T22:30:16.385736+08:00"
   }
 ]

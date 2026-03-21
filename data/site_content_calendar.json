@@ -52,7 +52,8 @@
       "post_id": "SITE-007",
       "category": "feature_tutorial",
       "title": "點亮故事（lines 風格）",
-      "description": "暗色文字，一行一行點亮，像在黑暗中找到光"
+      "description": "暗色文字，一行一行點亮，像在黑暗中找到光",
+      "status": "posted"
     },
     {
       "date": "2026-03-23",
