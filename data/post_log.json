@@ -280,5 +280,16 @@
     "post_id": "985242784680024_122104457013173816",
     "error": null,
     "timestamp": "2026-03-20T15:06:52.542543+08:00"
+  },
+  {
+    "date": "2026-03-21",
+    "story_id": "BDH-070",
+    "story_title": "嚐一個水果就夠了",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122104640703173816",
+    "error": null,
+    "timestamp": "2026-03-21T14:57:35.355217+08:00"
   }
 ]
