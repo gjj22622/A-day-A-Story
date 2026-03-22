@@ -302,5 +302,16 @@
     "status": "success",
     "post_id": "985242784680024_122104702413173816",
     "timestamp": "2026-03-21T22:30:16.385736+08:00"
+  },
+  {
+    "date": "2026-03-22",
+    "story_id": "BDH-025",
+    "story_title": "水火不相容",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122104785873173816",
+    "error": null,
+    "timestamp": "2026-03-22T15:01:25.485458+08:00"
   }
 ]
