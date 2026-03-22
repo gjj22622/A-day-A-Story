@@ -754,6 +754,55 @@ a { color: inherit; text-decoration: none; }
 }
 .original-text.show { display: block; animation: fadeInUp 0.5s ease; }
 
+/* Recommended stories */
+.recommended-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(192,214,223,0.1);
+}
+.recommended-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+}
+.recommended-cards {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.recommended-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border: 1px solid rgba(42,107,94,0.3);
+  border-radius: 10px;
+  background: rgba(42,107,94,0.08);
+  color: var(--moonlight);
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 200px;
+}
+.recommended-card:hover {
+  border-color: var(--lotus-gold);
+  background: rgba(212,165,116,0.1);
+  color: var(--lotus-gold);
+}
+.recommended-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.recommended-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Action buttons */
 .action-row {
   display: flex;

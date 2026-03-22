@@ -169,6 +169,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderStory(currentStory);
         showScreen('story-screen');
         if (window.Analytics) Analytics.track('story_view', { storyId: directStory.id, style: directStory.style, title: directStory.title, source: 'direct_link' });
+        // Auto-open treecave if ?treecave=1
+        if (urlParams.get('treecave') === '1') {
+          setTimeout(() => { if (typeof openAiChat === 'function') openAiChat(); }, 800);
+        }
         return; // Skip normal flow
       }
     }
@@ -421,11 +425,14 @@ function renderStory(story) {
     Analytics.track('story_view', { storyId: story.id, style: story.style, title: story.title });
   }
 
-  // Render social share buttons after DOM is ready
+  // Render social share buttons + recommended stories after DOM is ready
   setTimeout(() => {
     const shareSection = document.getElementById('shareSection');
     if (shareSection && window.Social) {
       Social.renderShareButtons(story, shareSection);
+    }
+    if (typeof renderRecommended === 'function') {
+      renderRecommended(story);
     }
   }, 100);
 
@@ -858,12 +865,69 @@ function buildMoralHTML(story) {
           <div class="ai-chat-note">🍃 這裡的對話不會被記錄，說完就隨風散去</div>
         </div>
       </div>
+      <div class="recommended-section" id="recommendedSection"></div>
       <div class="action-row">
         <button class="action-btn primary" onclick="tryAnother()">🪷 再抽一則</button>
         <button class="action-btn" onclick="goToMood()">換個心情</button>
       </div>
     </div>
   `;
+}
+
+// ===== RECOMMENDED STORIES =====
+function renderRecommended(story) {
+  const section = document.getElementById('recommendedSection');
+  if (!section || !story || !stories.length) return;
+
+  // Find related stories by shared tags
+  const myTags = new Set([
+    ...(story.tags?.emotions || []),
+    ...(story.tags?.contexts || []),
+    ...(story.tags?.themes || [])
+  ]);
+
+  const scored = stories
+    .filter(s => s.id !== story.id && !recentStoryIds.includes(s.id))
+    .map(s => {
+      const sTags = new Set([
+        ...(s.tags?.emotions || []),
+        ...(s.tags?.contexts || []),
+        ...(s.tags?.themes || [])
+      ]);
+      let score = 0;
+      myTags.forEach(t => { if (sTags.has(t)) score++; });
+      return { story: s, score };
+    })
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score || Math.random() - 0.5);
+
+  const picks = scored.slice(0, 3).map(x => x.story);
+  if (picks.length === 0) return;
+
+  section.innerHTML = `
+    <div class="recommended-label">你可能也會喜歡</div>
+    <div class="recommended-cards">
+      ${picks.map(p => `
+        <button class="recommended-card" onclick="jumpToStory('${p.id}')">
+          <span class="recommended-icon">${p.icon}</span>
+          <span class="recommended-title">${p.title}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function jumpToStory(storyId) {
+  const target = stories.find(s => s.id === storyId);
+  if (!target) return;
+  currentStory = target;
+  recentStoryIds.push(target.id);
+  if (recentStoryIds.length > 50) recentStoryIds.shift();
+  litCount = 0;
+  buildIdx = 0;
+  if (typewriterInterval) { clearInterval(typewriterInterval); typewriterInterval = null; }
+  if (window.Analytics) Analytics.track('recommended_click', { fromStoryId: currentStory.id, toStoryId: storyId });
+  showTransition();
 }
 
 // ===== MORAL SECTION ACTIONS =====

@@ -19,14 +19,58 @@
 <meta name="twitter:title" content="👥 五人共用一個僕人 — 一念清涼">
 <meta name="twitter:description" content="什麼都想要，就什麼都做不好。 就像一個人同時接五個案子、學三種語言、經營四個副業。多工不等於高效，分散精力只會每樣都半吊子。">
 <meta name="twitter:image" content="https://gjj22622.github.io/A-day-A-Story/images/stories/BDH-051.png">
-<!-- Redirect to main SPA -->
-<meta http-equiv="refresh" content="0;url=https://gjj22622.github.io/A-day-A-Story/?story=BDH-051">
-<script>window.location.replace("https://gjj22622.github.io/A-day-A-Story/?story=BDH-051");</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Serif TC',serif;background:#0D1B2A;color:#F5F0EB;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}
+.card{max-width:420px;width:100%}
+.icon{font-size:3rem;margin-bottom:0.5rem}
+h1{color:#D4A574;font-size:1.6rem;margin-bottom:1rem;line-height:1.4}
+.moral{color:#C0D6DF;font-size:1rem;line-height:1.8;margin-bottom:1rem;padding:0 0.5rem}
+.reflection{color:#7A8B9A;font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;font-style:italic}
+.cta-group{display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem}
+.cta{display:block;padding:0.85rem 1.2rem;border-radius:12px;text-decoration:none;font-size:0.95rem;transition:all 0.3s ease}
+.cta-primary{background:#D4A574;color:#0D1B2A;font-weight:bold}
+.cta-primary:hover{background:#e0b889}
+.cta-secondary{border:1px solid #2A6B5E;color:#C0D6DF;background:transparent}
+.cta-secondary:hover{background:#2A6B5E33}
+.cta-treecave{border:1px solid #7A8B9A44;color:#7A8B9A;background:transparent}
+.cta-treecave:hover{background:#7A8B9A22}
+.brand{color:#7A8B9A;font-size:0.75rem;margin-top:1rem}
+.brand a{color:#D4A574;text-decoration:none}
+.auto-hint{color:#7A8B9A55;font-size:0.7rem;margin-top:0.5rem}
+</style>
 </head>
-<body style="font-family:sans-serif;text-align:center;padding:2rem;background:#0D1B2A;color:#F5F0EB;">
-<p style="font-size:2rem;">👥</p>
-<h1 style="color:#D4A574;">五人共用一個僕人</h1>
-<p>什麼都想要，就什麼都做不好。</p>
-<p><a href="https://gjj22622.github.io/A-day-A-Story/?story=BDH-051" style="color:#D4A574;">閱讀完整故事 →</a></p>
+<body>
+<div class="card">
+  <div class="icon">👥</div>
+  <h1>五人共用一個僕人</h1>
+  <p class="moral">什麼都想要，就什麼都做不好。</p>
+  <p class="reflection">💭 你現在是不是也在同時應付太多「主人」？</p>
+  <div class="cta-group">
+    <a class="cta cta-primary" href="https://gjj22622.github.io/A-day-A-Story/?story=BDH-051">📖 閱讀完整故事</a>
+    <a class="cta cta-secondary" href="https://gjj22622.github.io/A-day-A-Story/">🪷 告訴我你的心情，為你找一則專屬故事</a>
+    <a class="cta cta-treecave" href="https://gjj22622.github.io/A-day-A-Story/?story=BDH-051&amp;treecave=1">🌳 想聊聊？進入千年樹洞</a>
+  </div>
+  <div class="brand">一念清涼 — 百喻經的現代智慧 · <a href="https://gjj22622.github.io/A-day-A-Story/">探索更多故事</a></div>
+  <div class="auto-hint" id="autoHint"></div>
+</div>
+<script>
+// 社群爬蟲不執行 JS，只有人類會看到著陸頁
+// 5 秒後自動跳轉到完整故事（給用戶時間看到 CTA）
+var countdown = 5;
+var hint = document.getElementById('autoHint');
+var timer = setInterval(function() {
+  hint.textContent = countdown + ' 秒後自動前往完整故事...';
+  if (countdown <= 0) {
+    clearInterval(timer);
+    window.location.href = "https://gjj22622.github.io/A-day-A-Story/?story=BDH-051";
+  }
+  countdown--;
+}, 1000);
+// 使用者點擊任何 CTA 則取消自動跳轉
+document.querySelectorAll('.cta').forEach(function(el) {
+  el.addEventListener('click', function() { clearInterval(timer); });
+});
+</script>
 </body>
 </html>

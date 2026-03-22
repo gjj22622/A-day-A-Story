@@ -46,15 +46,18 @@ def get_og_image_url(story_id):
 
 
 def generate_page(story):
-    """生成單一故事的 OG 分享頁 HTML"""
+    """生成單一故事的 OG 分享頁 HTML — v2 著陸頁版"""
     sid = story['id']
     icon = story.get('icon', '🪷')
     title = story['title']
     moral = story.get('moral', '')
     elaboration = story.get('elaboration', '')
+    reflection = story.get('reflection', '')
     og_image = get_og_image_url(sid)
     story_url = f"{BASE_URL}/stories/{sid}/"
     redirect_url = f"{BASE_URL}/?story={sid}"
+    mood_url = f"{BASE_URL}/"
+    treecave_url = f"{BASE_URL}/?story={sid}&treecave=1"
 
     # OG description: moral + elaboration 前 150 字
     description = moral
@@ -64,6 +67,11 @@ def generate_page(story):
         description = description[:147] + '...'
 
     og_title = f"{icon} {title} — 一念清涼"
+
+    # 反思提問（truncate for display）
+    reflection_html = ""
+    if reflection:
+        reflection_html = f'<p class="reflection">💭 {escape(reflection)}</p>'
 
     page_html = f"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -86,15 +94,59 @@ def generate_page(story):
 <meta name="twitter:title" content="{escape(og_title)}">
 <meta name="twitter:description" content="{escape(description)}">
 <meta name="twitter:image" content="{escape(og_image)}">
-<!-- Redirect to main SPA -->
-<meta http-equiv="refresh" content="0;url={escape(redirect_url)}">
-<script>window.location.replace({json.dumps(redirect_url)});</script>
+<style>
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Noto Serif TC',serif;background:#0D1B2A;color:#F5F0EB;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center}}
+.card{{max-width:420px;width:100%}}
+.icon{{font-size:3rem;margin-bottom:0.5rem}}
+h1{{color:#D4A574;font-size:1.6rem;margin-bottom:1rem;line-height:1.4}}
+.moral{{color:#C0D6DF;font-size:1rem;line-height:1.8;margin-bottom:1rem;padding:0 0.5rem}}
+.reflection{{color:#7A8B9A;font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;font-style:italic}}
+.cta-group{{display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem}}
+.cta{{display:block;padding:0.85rem 1.2rem;border-radius:12px;text-decoration:none;font-size:0.95rem;transition:all 0.3s ease}}
+.cta-primary{{background:#D4A574;color:#0D1B2A;font-weight:bold}}
+.cta-primary:hover{{background:#e0b889}}
+.cta-secondary{{border:1px solid #2A6B5E;color:#C0D6DF;background:transparent}}
+.cta-secondary:hover{{background:#2A6B5E33}}
+.cta-treecave{{border:1px solid #7A8B9A44;color:#7A8B9A;background:transparent}}
+.cta-treecave:hover{{background:#7A8B9A22}}
+.brand{{color:#7A8B9A;font-size:0.75rem;margin-top:1rem}}
+.brand a{{color:#D4A574;text-decoration:none}}
+.auto-hint{{color:#7A8B9A55;font-size:0.7rem;margin-top:0.5rem}}
+</style>
 </head>
-<body style="font-family:sans-serif;text-align:center;padding:2rem;background:#0D1B2A;color:#F5F0EB;">
-<p style="font-size:2rem;">{icon}</p>
-<h1 style="color:#D4A574;">{escape(title)}</h1>
-<p>{escape(moral)}</p>
-<p><a href="{escape(redirect_url)}" style="color:#D4A574;">閱讀完整故事 →</a></p>
+<body>
+<div class="card">
+  <div class="icon">{icon}</div>
+  <h1>{escape(title)}</h1>
+  <p class="moral">{escape(moral)}</p>
+  {reflection_html}
+  <div class="cta-group">
+    <a class="cta cta-primary" href="{escape(redirect_url)}">📖 閱讀完整故事</a>
+    <a class="cta cta-secondary" href="{escape(mood_url)}">🪷 告訴我你的心情，為你找一則專屬故事</a>
+    <a class="cta cta-treecave" href="{escape(treecave_url)}">🌳 想聊聊？進入千年樹洞</a>
+  </div>
+  <div class="brand">一念清涼 — 百喻經的現代智慧 · <a href="{escape(mood_url)}">探索更多故事</a></div>
+  <div class="auto-hint" id="autoHint"></div>
+</div>
+<script>
+// 社群爬蟲不執行 JS，只有人類會看到著陸頁
+// 5 秒後自動跳轉到完整故事（給用戶時間看到 CTA）
+var countdown = 5;
+var hint = document.getElementById('autoHint');
+var timer = setInterval(function() {{
+  hint.textContent = countdown + ' 秒後自動前往完整故事...';
+  if (countdown <= 0) {{
+    clearInterval(timer);
+    window.location.href = {json.dumps(redirect_url)};
+  }}
+  countdown--;
+}}, 1000);
+// 使用者點擊任何 CTA 則取消自動跳轉
+document.querySelectorAll('.cta').forEach(function(el) {{
+  el.addEventListener('click', function() {{ clearInterval(timer); }});
+}});
+</script>
 </body>
 </html>"""
     return page_html
