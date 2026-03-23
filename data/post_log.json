@@ -324,5 +324,16 @@
     "post_id": "985242784680024_122104935087173816",
     "error": null,
     "timestamp": "2026-03-23T15:24:04.396030+08:00"
+  },
+  {
+    "date": "2026-03-23",
+    "story_id": "SITE-008",
+    "story_title": "互動問答故事（qa 風格）",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122104979019173816",
+    "timestamp": "2026-03-23T22:58:51.388131+08:00"
   }
 ]

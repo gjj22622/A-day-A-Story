@@ -60,7 +60,8 @@
       "post_id": "SITE-008",
       "category": "feature_tutorial",
       "title": "互動問答故事（qa 風格）",
-      "description": "故事裡有選擇題，你的答案決定你看到什麼"
+      "description": "故事裡有選擇題，你的答案決定你看到什麼",
+      "status": "posted"
     },
     {
       "date": "2026-03-25",
