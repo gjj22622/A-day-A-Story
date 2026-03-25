@@ -357,5 +357,16 @@
     "post_id": "985242784680024_122105265135173816",
     "error": null,
     "timestamp": "2026-03-25T15:14:11.050336+08:00"
+  },
+  {
+    "date": "2026-03-25",
+    "story_id": "SITE-009",
+    "story_title": "社群分享功能",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122105325681173816",
+    "timestamp": "2026-03-25T23:03:08.902120+08:00"
   }
 ]
