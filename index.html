@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>一念清涼 — 讓古老智慧照亮你此刻的心</title>
-  <meta name="description" content="輸入你的心情，讓千年佛經寓言為你帶來一念清涼。98則百喻經寓言，5種互動體驗。">
+  <title>一念清涼 — 走了半輩子，讓千年智慧陪你歇一歇</title>
+  <meta name="description" content="走了半輩子的路，這裡有一盞燈。98則百喻經寓言，陪你歇一歇。">
   <!-- Open Graph / Facebook / LINE -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://gjj22622.github.io/A-day-A-Story/">
-  <meta property="og:title" content="一念清涼 — 讓古老智慧照亮你此刻的心">
-  <meta property="og:description" content="輸入你的心情，讓千年佛經寓言為你帶來一念清涼。98則百喻經寓言，AI 智慧推薦，說什麼都能懂。">
+  <meta property="og:title" content="一念清涼 — 走了半輩子，讓千年智慧陪你歇一歇">
+  <meta property="og:description" content="走了半輩子的路，這裡有一盞燈。98則千年寓言，說什麼都聽得懂，陪你歇一歇。">
   <meta property="og:image" content="https://gjj22622.github.io/A-day-A-Story/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -17,12 +17,12 @@
   <meta property="og:site_name" content="一念清涼">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="一念清涼 — 讓古老智慧照亮你此刻的心">
-  <meta name="twitter:description" content="輸入你的心情，讓千年佛經寓言為你帶來一念清涼。">
+  <meta name="twitter:title" content="一念清涼 — 走了半輩子，讓千年智慧陪你歇一歇">
+  <meta name="twitter:description" content="走了半輩子的路，這裡有一盞燈。98則千年寓言，陪你歇一歇。">
   <meta name="twitter:image" content="https://gjj22622.github.io/A-day-A-Story/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css?v=3.5.0">
+  <link rel="stylesheet" href="./css/style.css?v=4.0.0">
 </head>
 <body>
   <!-- Ambient fireflies -->
@@ -32,10 +32,11 @@
   <div class="screen active" id="landing">
     <div class="lotus-icon">🪷</div>
     <h1 class="brand-title">一念清涼</h1>
-    <p class="brand-sub">讓千年古老智慧<br>照亮你此刻的心</p>
-    <button class="enter-btn" onclick="goToMood()">尋 一 則 故 事</button>
-    <p style="margin-top:2rem; font-size:0.8rem; color:var(--muted); opacity:0.5;">源自《百喻經》— 西元五世紀佛教寓言</p>
-    <a class="fb-page-btn" href="https://www.facebook.com/onemomentcool" target="_blank" rel="noopener">
+    <p class="brand-sub">走了半輩子的路<br>這裡有一盞燈</p>
+    <button class="enter-btn" onclick="goToMood()">坐下來，聽一則故事</button>
+    <p style="margin-top:1.5rem; font-size:0.85rem; color:var(--muted); opacity:0.6;">這些故事，已經陪人走過一千五百年</p>
+    <button class="enter-btn-secondary" onclick="goToTreecaveDirect()" style="margin-top:1rem; background:transparent; border:1px solid var(--jade); color:var(--jade); padding:0.7rem 2rem; border-radius:999px; cursor:pointer; font-size:1rem; font-family:'Noto Sans TC',sans-serif; transition:all 0.3s;">🌳 不想聽故事，只想說說話</button>
+    <a class="fb-page-btn" href="https://www.facebook.com/onemomentcool" target="_blank" rel="noopener" style="margin-top:1.5rem;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
       追蹤粉專
     </a>
@@ -44,57 +45,35 @@
   <!-- SCREEN 2: MOOD SELECTION -->
   <div class="screen" id="mood-select">
     <div class="mood-header">
-      <h2>你現在的感覺是什麼？</h2>
-      <p>選擇最貼近的心情，或直接輸入你的狀態</p>
+      <h2>今天，什麼事在你心裡放不下？</h2>
+      <p>說說看，或者選一個最像你的</p>
     </div>
     <div class="mood-input-area">
       <div class="mood-input-wrap">
-        <input type="text" class="mood-input" id="moodInput" placeholder="例如：覺得很累、工作壓力大、不知道該怎麼選擇..." autocomplete="off">
-        <button class="mood-submit" onclick="submitMood()">求一念</button>
+        <input type="text" class="mood-input" id="moodInput" placeholder="例如：照顧媽媽好累、不知道該不該退休、覺得沒人懂我..." autocomplete="off">
+        <button class="mood-submit" onclick="submitMood()">幫我找一則</button>
       </div>
-      <p class="ai-hint">✨ AI 智慧推薦 — 說什麼都能懂</p>
-      <div class="divider-text">或者，選一個最貼近你的感受</div>
+      <p class="ai-hint">✨ 說什麼都可以，這裡聽得懂</p>
+      <div class="divider-text">或者，看看下面哪個像你</div>
 
-      <!-- EMOTION TAGS -->
+      <!-- 50+ LIFE SCENE TAGS (redesigned: single group, 10 scene-based phrases) -->
       <div class="tag-section">
-        <div class="tag-section-title">🌧 我感到…</div>
-        <div class="tag-cloud">
-          <button class="mood-tag" data-tags="anxiety,exhaustion">焦慮疲憊</button>
-          <button class="mood-tag" data-tags="confusion">迷茫困惑</button>
-          <button class="mood-tag" data-tags="frustration,anger">挫敗憤怒</button>
-          <button class="mood-tag" data-tags="sadness,loneliness">悲傷孤單</button>
-          <button class="mood-tag" data-tags="regret,guilt">後悔自責</button>
-          <button class="mood-tag" data-tags="fear,despair">恐懼絕望</button>
-          <button class="mood-tag" data-tags="jealousy,resentment">嫉妒委屈</button>
+        <div class="tag-section-title">你最近，是不是也這樣？</div>
+        <div class="mood-tags-grid">
+          <button class="mood-tag mood-tag-50plus" data-tags="exhaustion,perseverance,career_failure">撐得好累，但不能倒</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="loneliness,resentment,relationship_family">一個人扛，沒人懂</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="exhaustion,relationship_family,guilt">照顧家人，快喘不過氣</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="confusion,life_decision,present_moment">不知道這樣忙，到底為了什麼</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="letting_go,regret,acceptance">有些事，放不下也拿不起</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="fear,health_concern,anxiety">對自己的身體，開始害怕</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="career_failure,frustration,change_transition">在職場上，覺得自己被推著走</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="anger,resentment,frustration">心裡有氣，但說不出口</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="peace_seeking,courage_needed,acceptance">想停下來，但不敢</button>
+          <button class="mood-tag mood-tag-50plus" data-tags="confusion,life_decision,growth">走了半輩子，然後呢？</button>
         </div>
       </div>
 
-      <!-- CONTEXT TAGS -->
-      <div class="tag-section">
-        <div class="tag-section-title">🔍 我正在面對…</div>
-        <div class="tag-cloud">
-          <button class="mood-tag" data-tags="career_failure,career_decision">工作職涯</button>
-          <button class="mood-tag" data-tags="relationship_conflict,relationship_family">人際關係</button>
-          <button class="mood-tag" data-tags="self_doubt,perfectionism">自我懷疑</button>
-          <button class="mood-tag" data-tags="life_decision,change_transition">人生抉擇</button>
-          <button class="mood-tag" data-tags="letting_go,loss">放不下</button>
-          <button class="mood-tag" data-tags="failure_setback,criticism">失敗打擊</button>
-        </div>
-      </div>
-
-      <!-- ASPIRATION TAGS -->
-      <div class="tag-section">
-        <div class="tag-section-title">✨ 我渴望…</div>
-        <div class="tag-cloud">
-          <button class="mood-tag" data-tags="peace_seeking,acceptance">內心平靜</button>
-          <button class="mood-tag" data-tags="courage_needed,motivation">勇氣與動力</button>
-          <button class="mood-tag" data-tags="growth,hope">成長突破</button>
-          <button class="mood-tag" data-tags="patience,perseverance">耐心堅持</button>
-          <button class="mood-tag" data-tags="simplicity,present_moment">返璞歸真</button>
-        </div>
-      </div>
-
-      <button class="seek-btn" id="seekBtn" onclick="submitMood()">🪷 為你尋一則故事</button>
+      <button class="seek-btn" id="seekBtn" onclick="submitMood()">🪷 幫你找一則故事</button>
 
       <div class="random-divider">
         <span class="random-divider-line"></span>
@@ -102,7 +81,7 @@
         <span class="random-divider-line"></span>
       </div>
       <button class="random-btn" onclick="randomStory()">🎲 隨緣一則</button>
-      <p class="random-hint">不問心情，隨緣遇見一則古老智慧</p>
+      <p class="random-hint">不想多說，就讓緣分帶路</p>
     </div>
   </div>
 
@@ -116,7 +95,7 @@
 
   <!-- SCREEN 4: STORY DISPLAY -->
   <div class="screen" id="story-screen">
-    <button class="back-btn" onclick="goToMood()">← 換個心情</button>
+    <button class="back-btn" onclick="goToMood()">← 換一個</button>
     <div class="story-container" id="storyContainer"></div>
   </div>
 
@@ -125,10 +104,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <!-- Analytics & Social modules -->
-  <script src="./js/analytics.js?v=3.5.0"></script>
-  <script src="./js/social.js?v=3.5.0"></script>
+  <script src="./js/analytics.js"></script>
+  <script src="./js/social.js"></script>
 
   <!-- Main App -->
-  <script src="./js/app.js?v=3.5.0"></script>
+  <script src="./js/app.js?v=4.0.0"></script>
 </body>
 </html>

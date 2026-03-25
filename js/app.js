@@ -35,7 +35,11 @@ async function aiSeekStory(userInput) {
   const exclude = recentStoryIds.length > 0
     ? `\n排除最近看過：${recentStoryIds.join(', ')}` : '';
 
-  const prompt = `你是「一念清涼」AI推薦引擎。從百喻經98則寓言中，根據使用者心情選出最適合的故事。
+  const prompt = `你在幫一個 50 歲以上、正在人生路上咬牙撐著的人推薦故事。
+他們可能是照顧父母的三明治族、被職場推著走的主管、或是開始問自己「然後呢」的中年人。
+
+根據他們說的話，感受他們「沒說出口的那個部分」，選出最能讓他們覺得「原來不是只有我這樣」的 3 則故事。
+不要選太沉重的，也不要選太雞湯的。選那種讀完會安靜一下、然後微微點頭的故事。
 
 選擇原則：
 1. 故事寓意要能回應使用者的處境或情緒
@@ -169,10 +173,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderStory(currentStory);
         showScreen('story-screen');
         if (window.Analytics) Analytics.track('story_view', { storyId: directStory.id, style: directStory.style, title: directStory.title, source: 'direct_link' });
-        // Auto-open treecave if ?treecave=1
-        if (urlParams.get('treecave') === '1') {
-          setTimeout(() => { if (typeof openAiChat === 'function') openAiChat(); }, 800);
-        }
         return; // Skip normal flow
       }
     }
@@ -363,11 +363,11 @@ function seekStory(userInput) {
 // ===== TRANSITION SCREEN =====
 function showTransition(autoRender = true) {
   const phrases = [
-    "正在千年智慧中<br>為你尋找一念清涼…",
-    "翻開兩千年前的經卷<br>尋找屬於你的那一頁…",
-    "在古老的寓言裡<br>有一則故事正等著你…",
-    "讓時光倒流一千五百年<br>那裡有人也曾和你一樣…",
-    "AI 正在細讀千年經卷<br>為你的心事尋找解方…"
+    "千年的書頁正在翻動<br>找一則跟你有緣的…",
+    "很久很久以前<br>有一個人，跟你遇到了一樣的事…",
+    "別急，故事已經等了你一千五百年<br>不差這幾秒…",
+    "你以為只有你這樣嗎？<br>一千五百年前就有人跟你一樣了…",
+    "在那個年代<br>有人做了一件你一定會覺得很熟悉的事…"
   ];
 
   const phrase = phrases[Math.floor(Math.random() * phrases.length)];
@@ -411,6 +411,24 @@ function goToMood() {
   }
 }
 
+// ===== TREECAVE DIRECT ENTRY (50+ core feature) =====
+function goToTreecaveDirect() {
+  // Pick a random story as context for the treecave
+  if (!stories || stories.length === 0) {
+    goToMood();
+    return;
+  }
+  const idx = Math.floor(Math.random() * stories.length);
+  currentStory = stories[idx];
+  lastUserMoodInput = '';
+  showTransition(true);
+  // After story renders, auto-open treecave
+  setTimeout(() => {
+    const trigger = document.getElementById('aiChatTrigger');
+    if (trigger) trigger.click();
+  }, 2500);
+}
+
 // ===== STORY RENDERERS =====
 function renderStory(story) {
   const container = document.getElementById('storyContainer');
@@ -425,14 +443,11 @@ function renderStory(story) {
     Analytics.track('story_view', { storyId: story.id, style: story.style, title: story.title });
   }
 
-  // Render social share buttons + recommended stories after DOM is ready
+  // Render social share buttons after DOM is ready
   setTimeout(() => {
     const shareSection = document.getElementById('shareSection');
     if (shareSection && window.Social) {
       Social.renderShareButtons(story, shareSection);
-    }
-    if (typeof renderRecommended === 'function') {
-      renderRecommended(story);
     }
   }, 100);
 
@@ -524,7 +539,7 @@ function renderQA(story, container) {
       });
       html += `</div>`;
     } else if (i === story.text.length - 1) {
-      html += `<button class="qa-next" onclick="qaFinish()">看見寓意 🪷</button>`;
+      html += `<button class="qa-next" onclick="qaFinish()">這則故事想說的是… 🪷</button>`;
     } else {
       // No question for this step — add a continue button so user can advance
       html += `<button class="qa-next" onclick="qaAdvance(${i})">繼續 ▸</button>`;
@@ -589,7 +604,7 @@ function renderTypewriter(story, container) {
       <p class="story-source">${story.original_title}｜${story.source}</p>
     </div>
     <div class="typewriter-area" id="typewriterArea"></div>
-    <button class="typewriter-skip" id="typewriterSkip" onclick="typewriterSkip()">跳過打字效果</button>
+    <button class="typewriter-skip" id="typewriterSkip" onclick="typewriterSkip()">直接看完整故事</button>
   `;
   html += buildMoralHTML(story);
   container.innerHTML = html;
@@ -660,7 +675,7 @@ function renderLines(story, container) {
       <h1 class="story-title">${story.title}</h1>
       <p class="story-source">${story.original_title}｜${story.source}</p>
     </div>
-    <div class="lines-hint">點擊每一行，點亮故事 ✨</div>
+    <div class="lines-hint">輕輕點每一行，慢慢讀 ✨</div>
   `;
 
   story.text.forEach((line, i) => {
@@ -680,7 +695,7 @@ function lightLine(idx) {
 
     if (litCount >= currentStory.text.length) {
       setTimeout(() => {
-        document.querySelector('.lines-hint').textContent = '故事讀完了 🪷';
+        document.querySelector('.lines-hint').textContent = '讀完了 🪷 往下看看寓意';
         const moral = document.querySelector('.moral-section');
         if (moral) {
           moral.classList.add('visible');
@@ -735,7 +750,7 @@ function buildNext() {
       const nextLabel = floorNames[buildIdx] || `第${buildIdx + 1}層`;
       btn.textContent = `蓋${nextLabel} 🏗️`;
     } else {
-      btn.textContent = "看見寓意 🪷";
+      btn.textContent = "這則故事想說的是… 🪷";
       btn.onclick = () => {
         const moral = document.querySelector('.moral-section');
         if (moral) {
@@ -817,117 +832,63 @@ function submitFeedback(feedbackType) {
 function buildMoralHTML(story) {
   return `
     <div class="moral-section">
-      <div class="moral-label">一念清涼 ── 寓意</div>
+      <div class="moral-label">這則故事想說的是…</div>
       <div class="moral-text">${story.moral}</div>
       <div class="moral-elaboration">${story.elaboration}</div>
       <div class="reflection-box">
-        <div class="reflection-label">今日一問</div>
+        <div class="reflection-label">想一想</div>
         <div class="reflection-q">${story.reflection}</div>
       </div>
-      <button class="original-toggle" onclick="toggleOriginal()">📜 查看原典文言文</button>
+      <button class="original-toggle" onclick="toggleOriginal()">🍃 看看一千五百年前的原文</button>
       <div class="original-text" id="originalText">${story.original_text}</div>
       <div class="share-section" id="shareSection"></div>
       <div class="feedback-section" id="feedbackSection">
-        <div class="feedback-title">讀完這則故事，你的感受是？</div>
-        <div class="feedback-subtitle">你的回饋將幫助我們為更多人帶來一念清涼</div>
+        <div class="feedback-title">這則故事，有說中你嗎？</div>
         <div class="feedback-options">
           <button class="feedback-btn" data-feedback="peace" onclick="submitFeedback('peace')">
             <span class="feedback-icon">🧘</span>
-            <span>感到平靜</span>
+            <span>心裡靜了一點</span>
           </button>
           <button class="feedback-btn" data-feedback="enlightened" onclick="submitFeedback('enlightened')">
             <span class="feedback-icon">💡</span>
-            <span>得到開示</span>
+            <span>好像突然想通了</span>
           </button>
           <button class="feedback-btn" data-feedback="insight" onclick="submitFeedback('insight')">
             <span class="feedback-icon">🪷</span>
-            <span>有所體悟</span>
+            <span>原來不是只有我這樣</span>
           </button>
           <button class="feedback-btn" data-feedback="thinking" onclick="submitFeedback('thinking')">
             <span class="feedback-icon">🤔</span>
-            <span>仍在思考</span>
+            <span>還在想…</span>
+          </button>
+          <button class="feedback-btn" data-feedback="none" onclick="submitFeedback('none')">
+            <span class="feedback-icon">😶</span>
+            <span>沒什麼感覺</span>
           </button>
         </div>
-        <div class="feedback-thanks" id="feedbackThanks">感謝你的回饋 🙏 願你帶著這份清涼前行</div>
+        <div class="feedback-thanks" id="feedbackThanks">謝謝你 🙏 願這份清涼陪你走一段路</div>
       </div>
       <div class="ai-chat-section" id="aiChatSection">
         <button class="ai-chat-trigger" id="aiChatTrigger" onclick="openAiChat()">
           <span class="ai-chat-trigger-icon">🌳</span>
-          <span class="ai-chat-trigger-text">對樹洞說說</span>
-          <span class="ai-chat-trigger-hint">不記錄、不評判，說完隨風而去</span>
+          <span class="ai-chat-trigger-text">跟老樹說說心裡話</span>
+          <span class="ai-chat-trigger-hint">這裡沒有人會評判你，說完就讓風帶走</span>
         </button>
         <div class="ai-chat-container" id="aiChatContainer" style="display:none">
           <div class="ai-chat-messages" id="aiChatMessages"></div>
           <div class="ai-chat-input-wrap">
-            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="你想說什麼都可以..." autocomplete="off">
-            <button class="ai-chat-send" id="aiChatSend" onclick="sendAiChat()">說</button>
+            <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="想說什麼就說，不用組織語言…" autocomplete="off">
+            <button class="ai-chat-send" id="aiChatSend" onclick="sendAiChat()">說出來</button>
           </div>
-          <div class="ai-chat-note">🍃 這裡的對話不會被記錄，說完就隨風散去</div>
+          <div class="ai-chat-note">🍃 你說的話不會留下來，就像風吹過樹梢</div>
         </div>
       </div>
-      <div class="recommended-section" id="recommendedSection"></div>
       <div class="action-row">
-        <button class="action-btn primary" onclick="tryAnother()">🪷 再抽一則</button>
-        <button class="action-btn" onclick="goToMood()">換個心情</button>
+        <button class="action-btn primary" onclick="tryAnother()">🪷 再聽一則</button>
+        <button class="action-btn" onclick="goToMood()">換一個</button>
       </div>
     </div>
   `;
-}
-
-// ===== RECOMMENDED STORIES =====
-function renderRecommended(story) {
-  const section = document.getElementById('recommendedSection');
-  if (!section || !story || !stories.length) return;
-
-  // Find related stories by shared tags
-  const myTags = new Set([
-    ...(story.tags?.emotions || []),
-    ...(story.tags?.contexts || []),
-    ...(story.tags?.themes || [])
-  ]);
-
-  const scored = stories
-    .filter(s => s.id !== story.id && !recentStoryIds.includes(s.id))
-    .map(s => {
-      const sTags = new Set([
-        ...(s.tags?.emotions || []),
-        ...(s.tags?.contexts || []),
-        ...(s.tags?.themes || [])
-      ]);
-      let score = 0;
-      myTags.forEach(t => { if (sTags.has(t)) score++; });
-      return { story: s, score };
-    })
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score || Math.random() - 0.5);
-
-  const picks = scored.slice(0, 3).map(x => x.story);
-  if (picks.length === 0) return;
-
-  section.innerHTML = `
-    <div class="recommended-label">你可能也會喜歡</div>
-    <div class="recommended-cards">
-      ${picks.map(p => `
-        <button class="recommended-card" onclick="jumpToStory('${p.id}')">
-          <span class="recommended-icon">${p.icon}</span>
-          <span class="recommended-title">${p.title}</span>
-        </button>
-      `).join('')}
-    </div>
-  `;
-}
-
-function jumpToStory(storyId) {
-  const target = stories.find(s => s.id === storyId);
-  if (!target) return;
-  currentStory = target;
-  recentStoryIds.push(target.id);
-  if (recentStoryIds.length > 50) recentStoryIds.shift();
-  litCount = 0;
-  buildIdx = 0;
-  if (typewriterInterval) { clearInterval(typewriterInterval); typewriterInterval = null; }
-  if (window.Analytics) Analytics.track('recommended_click', { fromStoryId: currentStory.id, toStoryId: storyId });
-  showTransition();
 }
 
 // ===== MORAL SECTION ACTIONS =====
@@ -1000,7 +961,7 @@ function openAiChat() {
   // Auto-send first AI message (greeting + personalized reflection prompt)
   const msgs = document.getElementById('aiChatMessages');
   msgs.innerHTML = '';
-  addChatBubble('ai', '樹洞正在聆聽...');
+  addChatBubble('ai', '老樹在聽…');
   sendFirstAiMessage();
 
   // Focus input
@@ -1012,7 +973,11 @@ async function sendFirstAiMessage() {
   const moodContext = lastUserMoodInput
     ? `使用者的心情：「${lastUserMoodInput}」\n` : '';
 
-  const systemPrompt = `你是「一念清涼」千年樹洞的聲音。一棵見證了兩千年智慧的菩提古樹，使用者選擇對你傾訴心事。你不說教、不評判、不給標準答案，而是用溫暖的語氣，把故事裡的智慧，輕輕連結到他正在經歷的事。像風穿過樹洞發出的低語，溫柔但有力量。
+  const systemPrompt = `你是「一念清涼」千年樹洞的聲音。一棵在山間靜立兩千年的菩提古樹，使用者選擇對你傾訴心事。
+
+跟你說話的人，大多是 50 歲以上、正在人生路上咬牙撐著的人。他們可能正在照顧年邁的父母、擔心還沒獨立的孩子、對自己的身體感到不安、或者在問自己「這輩子到底值不值得」。他們不需要你給答案，他們需要的是有人真的聽懂了。
+
+你不說教、不評判、不給標準答案，而是用溫厚的語氣，把故事裡的智慧，輕輕連結到他正在經歷的事。像風穿過樹洞發出的低語，溫柔但有力量。
 
 故事標題：${story.title}
 故事內容：${story.text.join('\n')}
@@ -1022,15 +987,16 @@ async function sendFirstAiMessage() {
 ${moodContext}
 你的角色規則：
 1. 像風穿過樹洞的低語——溫柔、不說教、不居高臨下
-2. 用口語化的現代中文，簡潔有力
-3. 每次回覆控制在 80-120 字以內
-4. 主動連結故事寓意到使用者的真實處境
-5. 適時提出一個有深度但不尖銳的反思問題
+2. 用口語化的現代中文，溫厚有閱歷感，像老朋友泡茶聊天
+3. 每次回覆控制在 100-150 字以內
+4. 不急著反問，先「聽完」再回應。多用「我懂」「你已經撐很久了」「這很不容易」
+5. 適時提出反思，但用「會不會其實是…」而不是「你有沒有想過…」
 6. 可以用故事中的情節做類比
 7. 不要重複說「這則故事告訴我們」這種制式語言
 8. 偶爾可以用自然意象（風、葉、光）來回應，但不要過度
+9. 記住：他們什麼道理都聽過了，他們需要的不是道理，是有人懂
 
-第一則訊息：根據使用者的心情和這則故事，用樹洞溫柔的口吻給一段開場，然後問一個連結到他們生活的反思問題。不要超過 100 字。`;
+第一則訊息：根據使用者的心情和這則故事，用老樹溫厚的口吻給一段開場。先讓他感覺被理解，再輕輕帶出一個連結到他生活的反思。不要超過 120 字。`;
 
   aiChatHistory = [{ role: 'user', parts: [{ text: systemPrompt }] }];
 
@@ -1044,7 +1010,7 @@ ${moodContext}
   } catch (err) {
     const msgs = document.getElementById('aiChatMessages');
     msgs.lastChild.remove();
-    addChatBubble('ai', '樹洞今天有點累了 🍃 不過沒關係，你可以自己靜靜想想這則故事帶給你什麼。');
+    addChatBubble('ai', '老樹今天有點累了 🍃 不過沒關係，靜靜坐一會兒，讓故事自己在心裡慢慢發酵。');
     console.warn('AI chat first message failed:', err.message);
   }
 }
@@ -1058,10 +1024,10 @@ async function sendAiChat() {
   input.value = '';
   addChatBubble('user', userText);
 
-  // Limit conversation to 10 rounds
+  // Limit conversation to 15 rounds
   const userMsgCount = aiChatHistory.filter(m => m.role === 'user').length;
-  if (userMsgCount >= 10) {
-    addChatBubble('ai', '謝謝你願意說出來 🍃 這些話已經隨風而去了，但故事裡的智慧會留在你心裡。帶著這份清涼，繼續走吧。');
+  if (userMsgCount >= 15) {
+    addChatBubble('ai', '謝謝你今天願意坐下來說這些 🍃 這些話已經隨風去了，但你的心，輕了一點點吧？這棵老樹每天都在，想說話的時候隨時回來。帶著這份清涼，慢慢走，不急。');
     document.querySelector('.ai-chat-input-wrap').style.display = 'none';
     isChatting = false;
     return;
@@ -1090,7 +1056,7 @@ async function sendAiChat() {
     }
   } catch (err) {
     typingBubble.remove();
-    addChatBubble('ai', '風太大了，沒聽清楚，再說一次？');
+    addChatBubble('ai', '風太大了，沒聽清楚。再說一次好嗎？');
     // Remove failed user message from history
     aiChatHistory.pop();
     console.warn('AI chat failed:', err.message);
