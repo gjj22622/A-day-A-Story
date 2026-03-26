@@ -76,7 +76,8 @@
       "post_id": "SITE-010",
       "category": "dashboard_insight",
       "title": "被推薦最多次的故事 TOP 5",
-      "description": "這5則故事，最多人的心情跟它共鳴"
+      "description": "這5則故事，最多人的心情跟它共鳴",
+      "status": "posted"
     },
     {
       "date": "2026-03-28",
