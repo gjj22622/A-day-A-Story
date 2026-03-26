@@ -368,5 +368,16 @@
     "status": "success",
     "post_id": "985242784680024_122105325681173816",
     "timestamp": "2026-03-25T23:03:08.902120+08:00"
+  },
+  {
+    "date": "2026-03-26",
+    "story_id": "BDH-016",
+    "story_title": "用牛奶灌甘蔗",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122105433879173816",
+    "error": null,
+    "timestamp": "2026-03-26T15:22:40.116494+08:00"
   }
 ]
