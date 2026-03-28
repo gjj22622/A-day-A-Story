@@ -422,5 +422,16 @@
     "post_id": "985242784680024_122105868369173816",
     "error": null,
     "timestamp": "2026-03-28T15:09:03.767738+08:00"
+  },
+  {
+    "date": "2026-03-28",
+    "story_id": "SITE-011",
+    "story_title": "閱讀後心情回饋",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122105910015173816",
+    "timestamp": "2026-03-28T22:35:07.292044+08:00"
   }
 ]
