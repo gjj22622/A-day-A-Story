@@ -433,5 +433,16 @@
     "status": "success",
     "post_id": "985242784680024_122105910015173816",
     "timestamp": "2026-03-28T22:35:07.292044+08:00"
+  },
+  {
+    "date": "2026-03-29",
+    "story_id": "BDH-075",
+    "story_title": "駱駝與瓶子都沒了",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122106003261173816",
+    "error": null,
+    "timestamp": "2026-03-29T15:16:24.106607+08:00"
   }
 ]
