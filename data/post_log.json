@@ -455,5 +455,16 @@
     "post_id": "985242784680024_122106149667173816",
     "error": null,
     "timestamp": "2026-03-30T15:56:29.805666+08:00"
+  },
+  {
+    "date": "2026-03-30",
+    "story_id": "SITE-012",
+    "story_title": "蓋樓故事（build 風格）",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122106198555173816",
+    "timestamp": "2026-03-30T23:07:30.376158+08:00"
   }
 ]
