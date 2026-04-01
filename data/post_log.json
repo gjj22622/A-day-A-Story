@@ -488,5 +488,16 @@
     "post_id": "985242784680024_122106433101173816",
     "error": null,
     "timestamp": "2026-04-01T15:46:16.445052+08:00"
+  },
+  {
+    "date": "2026-04-01",
+    "story_id": "SITE-013",
+    "story_title": "讀完故事後大家最常的反應",
+    "platform": "facebook",
+    "category": "dashboard_insight",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122106480807173816",
+    "timestamp": "2026-04-01T23:07:19.332709+08:00"
   }
 ]
