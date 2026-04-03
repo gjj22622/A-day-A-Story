@@ -521,5 +521,16 @@
     "post_id": "985242784680024_122106723429173816",
     "error": null,
     "timestamp": "2026-04-03T15:22:32.495101+08:00"
+  },
+  {
+    "date": "2026-04-03",
+    "story_id": "SITE-014",
+    "story_title": "最冷門 vs 最熱門的故事",
+    "platform": "facebook",
+    "category": "dashboard_insight",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122106767961173816",
+    "timestamp": "2026-04-03T22:46:38.669433+08:00"
   }
 ]
