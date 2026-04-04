@@ -532,5 +532,16 @@
     "status": "success",
     "post_id": "985242784680024_122106767961173816",
     "timestamp": "2026-04-03T22:46:38.669433+08:00"
+  },
+  {
+    "date": "2026-04-04",
+    "story_id": "BDH-065",
+    "story_title": "五百顆歡喜丸",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122106848211173816",
+    "error": null,
+    "timestamp": "2026-04-04T15:11:54.586383+08:00"
   }
 ]
