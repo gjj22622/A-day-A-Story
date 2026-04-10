@@ -132,7 +132,8 @@
       "post_id": "SITE-017",
       "category": "dashboard_insight",
       "title": "本月心情關鍵字雲",
-      "description": "把大家輸入的心情匿名整理，畫成一朵雲"
+      "description": "把大家輸入的心情匿名整理，畫成一朵雲",
+      "status": "posted"
     },
     {
       "date": "2026-04-13",
