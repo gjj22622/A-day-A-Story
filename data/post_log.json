@@ -708,5 +708,16 @@
     "post_id": "985242784680024_122108160387173816",
     "error": null,
     "timestamp": "2026-04-15T16:00:55.383278+08:00"
+  },
+  {
+    "date": "2026-04-15",
+    "story_id": "SITE-019",
+    "story_title": "用戶最愛的故事主題 TOP 3",
+    "platform": "facebook",
+    "category": "dashboard_insight",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122108200815173816",
+    "timestamp": "2026-04-15T23:08:09.996034+08:00"
   }
 ]
