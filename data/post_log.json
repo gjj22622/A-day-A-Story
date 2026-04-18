@@ -752,5 +752,16 @@
     "post_id": "985242784680024_122108561901173816",
     "error": null,
     "timestamp": "2026-04-18T15:21:30.510756+08:00"
+  },
+  {
+    "date": "2026-04-18",
+    "story_id": "SITE-020",
+    "story_title": "文言文原典對照",
+    "platform": "facebook",
+    "category": "feature_tutorial",
+    "series": "site_posts",
+    "status": "success",
+    "post_id": "985242784680024_122108602569173816",
+    "timestamp": "2026-04-18T22:42:15.751958+08:00"
   }
 ]
