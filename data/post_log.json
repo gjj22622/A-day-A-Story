@@ -763,5 +763,16 @@
     "status": "success",
     "post_id": "985242784680024_122108602569173816",
     "timestamp": "2026-04-18T22:42:15.751958+08:00"
+  },
+  {
+    "date": "2026-04-19",
+    "story_id": "BDH-044",
+    "story_title": "第七塊餅才飽",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122108679285173816",
+    "error": null,
+    "timestamp": "2026-04-19T15:41:50.446948+08:00"
   }
 ]
