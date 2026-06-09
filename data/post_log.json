@@ -1324,5 +1324,16 @@
     "post_id": "985242784680024_122114913477173816",
     "error": null,
     "timestamp": "2026-06-08T19:13:50.287652+08:00"
+  },
+  {
+    "date": "2026-06-09",
+    "story_id": "BDH-073",
+    "story_title": "說馬死了",
+    "platform": "facebook",
+    "theme_week": "",
+    "status": "success",
+    "post_id": "985242784680024_122115085869173816",
+    "error": null,
+    "timestamp": "2026-06-09T17:59:24.480178+08:00"
   }
 ]
